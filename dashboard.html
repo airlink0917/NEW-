@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>売上カレンダー管理ダッシュボード</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Meiryo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 400px;
+        }
+
+        .login-container h2 {
+            margin-bottom: 30px;
+            color: #333;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #5a67d8;
+        }
+
+        .dashboard {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 95%;
+            max-width: 1400px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .dashboard h1 {
+            color: #333;
+        }
+
+        .logout-btn {
+            padding: 8px 20px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+
+        .calendar-controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-group label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .control-group select, .control-group input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #5a67d8;
+        }
+
+        .yearly-summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .yearly-summary-table th {
+            background: #667eea;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-size: 12px;
+        }
+
+        .yearly-summary-table td {
+            padding: 8px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 12px;
+        }
+
+        .yearly-summary-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .yearly-total-row {
+            background: #f3f4f6;
+            font-weight: bold;
+        }
+
+        .yearly-total-row td {
+            border-top: 2px solid #667eea;
+        }
+
+        .profit-positive {
+            color: #059669;
+            font-weight: bold;
+        }
+
+        .profit-negative {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        /* Mobile Responsive Styles */
+        @media screen and (max-width: 768px) {
+            .dashboard {
+                width: 100%;
+                padding: 15px;
+                border-radius: 0;
+            }
+
+            .dashboard h1 {
+                font-size: 20px;
+            }
+
+            .calendar-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .control-group {
+                width: 100%;
+            }
+
+            .nav-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .calendar-container {
+                padding: 10px;
+                overflow-x: auto;
+            }
+
+            .calendar {
+                min-width: 100%;
+            }
+
+            .calendar th {
+                padding: 8px 2px;
+                font-size: 11px;
+            }
+
+            .calendar td {
+                height: 80px;
+                min-height: 80px;
+                max-height: 80px;
+                padding: 3px;
+                font-size: 9px;
+            }
+
+            .day-number {
+                font-size: 12px;
+                margin-bottom: 2px;
+            }
+
+            .day-content {
+                font-size: 8px;
+                max-height: 55px;
+            }
+
+            .metric-row {
+                font-size: 8px;
+            }
+
+            .metric-label {
+                font-size: 7px;
+            }
+
+            .weekly-total {
+                display: none;
+            }
+
+            .monthly-total {
+                font-size: 10px;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .stat-card {
+                min-width: auto;
+                padding: 10px;
+            }
+
+            .stat-card h3 {
+                font-size: 11px;
+            }
+
+            .stat-value {
+                font-size: 16px;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 2% auto;
+                padding: 15px;
+                max-height: 95vh;
+            }
+
+            .modal-header h2 {
+                font-size: 18px;
+            }
+
+            .expense-item {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .expense-category,
+            .expense-custom,
+            .expense-amount-input {
+                width: 100%;
+            }
+
+            .yearly-summary-table {
+                font-size: 10px;
+            }
+
+            .yearly-summary-table th,
+            .yearly-summary-table td {
+                padding: 5px;
+                font-size: 10px;
+            }
+
+            .logout-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .dashboard-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .calendar td {
+                height: 60px;
+                min-height: 60px;
+                max-height: 60px;
+            }
+
+            .day-content {
+                max-height: 40px;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+
+            /* Show simplified calendar on very small screens */
+            .metric-row:not(:first-child) {
+                display: none;
+            }
+
+            .calendar-month-year {
+                font-size: 18px;
+            }
+        }
+
+        /* Touch-friendly buttons for mobile */
+        @media (hover: none) and (pointer: coarse) {
+            .nav-btn,
+            .modal-btn,
+            .add-expense-btn,
+            .remove-expense-btn,
+            .btn {
+                min-height: 44px;
+                font-size: 14px;
+            }
+
+            .calendar td {
+                cursor: pointer;
+                -webkit-tap-highlight-color: rgba(102, 126, 234, 0.2);
+            }
+
+            input[type="number"],
+            input[type="text"],
+            input[type="password"],
+            select,
+            textarea {
+                min-height: 44px;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+        }
+
+        /* Improve scrolling on mobile */
+        .calendar-container {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Landscape mode adjustments */
+        @media screen and (max-height: 500px) and (orientation: landscape) {
+            .modal-content {
+                max-height: 90vh;
+                margin: 1% auto;
+            }
+
+            .calendar td {
+                height: 50px;
+                min-height: 50px;
+                max-height: 50px;
+            }
+        }
+
+        .calendar-container {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+        }
+
+        .calendar-month-year {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .calendar {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: separate;
+            border-spacing: 5px;
+            background: transparent;
+        }
+
+        .calendar th {
+            padding: 15px 10px;
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        .calendar td {
+            background: white;
+            border: 1px solid #e5e7eb;
+            padding: 6px;
+            height: 120px;
+            min-height: 120px;
+            max-height: 120px;
+            width: 14.28%;
+            vertical-align: top;
+            position: relative;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 11px;
+            overflow: hidden;
+        }
+
+        .calendar td:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .calendar td.other-month {
+            background: #f3f4f6;
+            color: #9ca3af;
+        }
+
+        .calendar td.today {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+        }
+
+        .day-number {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .day-content {
+            font-size: 10px;
+            color: #4b5563;
+            line-height: 1.2;
+            overflow-y: auto;
+            max-height: 90px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1px;
+            line-height: 1.2;
+        }
+
+        .metric-label {
+            color: #6b7280;
+            font-size: 9px;
+            min-width: 25px;
+        }
+
+        .metric-value {
+            font-weight: 500;
+            font-size: 9px;
+            text-align: right;
+        }
+
+        .sales-amount {
+            color: #059669;
+            font-weight: bold;
+        }
+
+        .purchase-amount {
+            color: #dc2626;
+        }
+
+        .profit-amount {
+            color: #2563eb;
+        }
+
+        .expense-amount {
+            color: #dc2626;
+        }
+
+        .expense-section {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .expense-items {
+            margin-top: 10px;
+        }
+
+        .expense-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .expense-item input {
+            flex: 1;
+        }
+
+        .expense-item .expense-category {
+            flex: 2;
+        }
+
+        .expense-item .expense-amount-input {
+            flex: 1;
+        }
+
+        .add-expense-btn {
+            padding: 6px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .add-expense-btn:hover {
+            background: #5a67d8;
+        }
+
+        .remove-expense-btn {
+            padding: 6px 10px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .remove-expense-btn:hover {
+            background: #dc2626;
+        }
+
+        .expense-total {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .weekly-total {
+            background: #fce7f3;
+            font-weight: bold;
+            border: 2px solid #ec4899;
+            width: 14.28%;
+            min-width: 120px;
+        }
+
+        .monthly-total {
+            background: #dbeafe;
+            font-weight: bold;
+            border: 2px solid #3b82f6;
+        }
+
+        .day-memo {
+            color: #6b7280;
+            font-size: 11px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .sunday .day-number {
+            color: #ef4444;
+        }
+
+        .saturday .day-number {
+            color: #3b82f6;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-header h2 {
+            color: #333;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .modal-body .form-group {
+            margin-bottom: 0;
+        }
+
+        .modal-body input, .modal-body textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .modal-body textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .modal-btn.save {
+            background: #10b981;
+            color: white;
+        }
+
+        .modal-btn.save:hover {
+            background: #059669;
+        }
+
+        .modal-btn.cancel {
+            background: #6b7280;
+            color: white;
+        }
+
+        .modal-btn.cancel:hover {
+            background: #4b5563;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .stats-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container" id="loginContainer">
+        <h2>売上カレンダー管理システム</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="password">パスワード</label>
+                <input type="password" id="password" placeholder="パスワードを入力してください" required>
+            </div>
+            <button type="submit" class="btn">ログイン</button>
+        </form>
+    </div>
+
+    <div class="dashboard" id="dashboard">
+        <div class="dashboard-header">
+            <h1>売上カレンダー ダッシュボード</h1>
+            <button class="logout-btn" onclick="logout()">ログアウト</button>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <button class="nav-btn" onclick="openYearlySummary()" style="background: #10b981;">
+                📈 年間合計を見る
+            </button>
+        </div>
+
+        <div class="calendar-controls">
+            <div class="control-group">
+                <label for="year">年:</label>
+                <input type="number" id="year" min="2020" max="2030" value="2025" onchange="updateCalendar()">
+            </div>
+            <div class="control-group">
+                <label for="month">月:</label>
+                <select id="month" onchange="updateCalendar()">
+                    <option value="1">1月</option>
+                    <option value="2">2月</option>
+                    <option value="3">3月</option>
+                    <option value="4">4月</option>
+                    <option value="5">5月</option>
+                    <option value="6">6月</option>
+                    <option value="7">7月</option>
+                    <option value="8">8月</option>
+                    <option value="9">9月</option>
+                    <option value="10">10月</option>
+                    <option value="11">11月</option>
+                    <option value="12">12月</option>
+                </select>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="changeMonth(-1)">◀ 前月</button>
+                <button class="nav-btn" onclick="changeMonth(1)">次月 ▶</button>
+            </div>
+        </div>
+
+        <div class="calendar-container">
+            <div class="calendar-month-year" id="calendarTitle"></div>
+            <table class="calendar">
+                <thead>
+                    <tr>
+                        <th>日</th>
+                        <th>月</th>
+                        <th>火</th>
+                        <th>水</th>
+                        <th>木</th>
+                        <th>金</th>
+                        <th>土</th>
+                        <th style="background: #fce7f3; color: #831843; border: 2px solid #ec4899;">週計</th>
+                    </tr>
+                </thead>
+                <tbody id="calendarBody">
+                </tbody>
+            </table>
+        </div>
+
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <h3>月間売上合計</h3>
+                <div class="stat-value" id="monthTotal">¥0</div>
+            </div>
+            <div class="stat-card">
+                <h3>月間買取額合計</h3>
+                <div class="stat-value" id="purchaseTotal">¥0</div>
+            </div>
+            <div class="stat-card">
+                <h3>月間粗利益合計</h3>
+                <div class="stat-value" id="profitTotal">¥0</div>
+            </div>
+            <div class="stat-card">
+                <h3>月間経費合計</h3>
+                <div class="stat-value" id="expenseTotal">¥0</div>
+            </div>
+            <div class="stat-card">
+                <h3>月間営業利益</h3>
+                <div class="stat-value" id="operatingProfitTotal" style="font-weight: bold;">¥0</div>
+            </div>
+            <div class="stat-card">
+                <h3>月間来店数</h3>
+                <div class="stat-value" id="visitorsTotal">0人</div>
+            </div>
+            <div class="stat-card">
+                <h3>月間成約数</h3>
+                <div class="stat-value" id="contractsTotal">0件</div>
+            </div>
+            <div class="stat-card">
+                <h3>成約率</h3>
+                <div class="stat-value" id="conversionRate">0%</div>
+            </div>
+        </div>
+
+        <button class="nav-btn" onclick="saveAllData()" style="margin-top: 20px; background: #6b7280;">手動バックアップ</button>
+        <div style="font-size: 12px; color: #10b981; margin-top: 5px; text-align: center;">※ データは自動保存されています</div>
+        <div class="message" id="message"></div>
+    </div>
+
+    <!-- Modal for yearly summary -->
+    <div id="yearlyModal" class="modal">
+        <div class="modal-content" style="width: 800px; max-width: 90%;">
+            <div class="modal-header">
+                <h2>年間合計レポート</h2>
+                <span class="close" onclick="closeYearlyModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="yearSelect">年を選択:</label>
+                    <select id="yearSelect" onchange="updateYearlySummary()" style="width: 150px; padding: 8px;">
+                        <option value="2024">2024年</option>
+                        <option value="2025" selected>2025年</option>
+                        <option value="2026">2026年</option>
+                        <option value="2027">2027年</option>
+                        <option value="2028">2028年</option>
+                        <option value="2029">2029年</option>
+                        <option value="2030">2030年</option>
+                    </select>
+                </div>
+                <div id="yearlySummaryContent" style="margin-top: 20px;">
+                    <!-- Yearly summary will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for editing day data -->
+    <div id="dayModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">日付データ編集</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="modalPurchase">買取額</label>
+                    <input type="number" id="modalPurchase" placeholder="例: 30000" onchange="calculateSales(); autoSaveModalData();">
+                </div>
+                <div class="form-group">
+                    <label for="modalProfit">粗利益</label>
+                    <input type="number" id="modalProfit" placeholder="例: 20000" onchange="calculateSales(); autoSaveModalData();">
+                </div>
+                <div class="form-group">
+                    <label for="modalSales">売上金額（自動計算）</label>
+                    <input type="number" id="modalSales" placeholder="自動計算されます" readonly style="background-color: #f0f0f0;">
+                </div>
+                <div class="form-group">
+                    <label for="modalVisitors">来店数</label>
+                    <input type="number" id="modalVisitors" placeholder="例: 10" min="0" onchange="autoSaveModalData()">
+                </div>
+                <div class="form-group">
+                    <label for="modalContracts">成約数</label>
+                    <input type="number" id="modalContracts" placeholder="例: 3" min="0" onchange="autoSaveModalData()">
+                </div>
+                <div class="form-group">
+                    <label for="modalMemo">メモ</label>
+                    <textarea id="modalMemo" placeholder="メモを入力してください" onchange="autoSaveModalData()"></textarea>
+                </div>
+                
+                <div class="expense-section">
+                    <h3 style="margin-bottom: 10px; color: #333;">経費明細</h3>
+                    <div class="expense-items" id="expenseItems">
+                        <!-- Expense items will be added here dynamically -->
+                    </div>
+                    <button class="add-expense-btn" onclick="addExpenseItem()">+ 経費項目を追加</button>
+                    <div class="expense-total">
+                        <span>経費合計:</span>
+                        <span id="expenseTotal" style="color: #dc2626;">¥0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" onclick="closeModal()">キャンセル</button>
+                <button class="modal-btn save" onclick="saveModalData()">閉じる</button>
+                <div style="font-size: 12px; color: #10b981; margin-top: 10px; text-align: center;">
+                    ※ 入力内容は自動保存されます
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Password for the dashboard
+        const CORRECT_PASSWORD = 'saku11'; // Change this to your desired password
+        
+        // Current edit date
+        let currentEditDate = null;
+        
+        // Data storage - simplified to single data store
+        let calendarData = {};
+        let weeklyData = {};
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+            
+            if (password === CORRECT_PASSWORD) {
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                loadData();
+                updateCalendar();
+            } else {
+                alert('パスワードが正しくありません。');
+                document.getElementById('password').value = '';
+            }
+        });
+
+        function logout() {
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('loginContainer').style.display = 'block';
+            document.getElementById('password').value = '';
+        }
+
+        function changeMonth(direction) {
+            const yearInput = document.getElementById('year');
+            const monthSelect = document.getElementById('month');
+            let year = parseInt(yearInput.value);
+            let month = parseInt(monthSelect.value);
+            
+            month += direction;
+            
+            if (month > 12) {
+                month = 1;
+                year++;
+            } else if (month < 1) {
+                month = 12;
+                year--;
+            }
+            
+            yearInput.value = year;
+            monthSelect.value = month;
+            updateCalendar();
+        }
+
+        function updateCalendar() {
+            const year = parseInt(document.getElementById('year').value);
+            const month = parseInt(document.getElementById('month').value);
+            const firstDay = new Date(year, month - 1, 1);
+            const lastDay = new Date(year, month, 0);
+            const prevLastDay = new Date(year, month - 1, 0);
+            const startDay = firstDay.getDay();
+            const daysInMonth = lastDay.getDate();
+            const daysInPrevMonth = prevLastDay.getDate();
+            
+            // Update title
+            document.getElementById('calendarTitle').textContent = `${year}年 ${month}月`;
+            
+            const tbody = document.getElementById('calendarBody');
+            tbody.innerHTML = '';
+            
+            let date = 1;
+            let nextMonthDate = 1;
+            
+            // Monthly totals
+            let monthlyTotals = {
+                sales: 0,
+                purchase: 0,
+                profit: 0,
+                visitors: 0,
+                contracts: 0,
+                expenses: 0
+            };
+            
+            // Always create exactly 6 weeks for consistent layout
+            for (let week = 0; week < 6; week++) {
+                const row = tbody.insertRow();
+                
+                // Weekly totals for this row
+                let weeklyTotals = {
+                    sales: 0,
+                    purchase: 0,
+                    profit: 0,
+                    visitors: 0,
+                    contracts: 0,
+                    expenses: 0
+                };
+                
+                for (let day = 0; day < 7; day++) {
+                    const cell = row.insertCell();
+                    const dayDiv = document.createElement('div');
+                    
+                    if (week === 0 && day < startDay) {
+                        // Previous month dates
+                        dayDiv.className = 'day-number';
+                        dayDiv.textContent = daysInPrevMonth - startDay + day + 1;
+                        cell.className = 'other-month';
+                    } else if (date > daysInMonth) {
+                        // Next month dates
+                        dayDiv.className = 'day-number';
+                        dayDiv.textContent = nextMonthDate++;
+                        cell.className = 'other-month';
+                    } else {
+                        // Current month dates
+                        const currentDate = new Date(year, month - 1, date);
+                        const dateStr = `${year}-${month.toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`;
+                        
+                        dayDiv.className = 'day-number';
+                        dayDiv.textContent = date;
+                        
+                        // Add day of week classes
+                        if (day === 0) cell.className = 'sunday';
+                        if (day === 6) cell.className = 'saturday';
+                        
+                        // Check if today
+                        const today = new Date();
+                        if (year === today.getFullYear() && 
+                            month === today.getMonth() + 1 && 
+                            date === today.getDate()) {
+                            cell.classList.add('today');
+                        }
+                        
+                        // Add content
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'day-content';
+                        
+                        // Get all data
+                        const purchaseData = getPurchaseData(dateStr);
+                        const profitData = getProfitData(dateStr);
+                        const salesData = getSalesData(dateStr);
+                        const visitorsData = getVisitorsData(dateStr);
+                        const contractsData = getContractsData(dateStr);
+                        
+                        // Display metrics
+                        if (purchaseData) {
+                            const row = document.createElement('div');
+                            row.className = 'metric-row';
+                            row.innerHTML = `<span class="metric-label">買:</span><span class="purchase-amount">¥${parseInt(purchaseData).toLocaleString()}</span>`;
+                            contentDiv.appendChild(row);
+                            weeklyTotals.purchase += parseInt(purchaseData) || 0;
+                            monthlyTotals.purchase += parseInt(purchaseData) || 0;
+                        }
+                        
+                        if (profitData) {
+                            const row = document.createElement('div');
+                            row.className = 'metric-row';
+                            row.innerHTML = `<span class="metric-label">利:</span><span class="profit-amount">¥${parseInt(profitData).toLocaleString()}</span>`;
+                            contentDiv.appendChild(row);
+                            weeklyTotals.profit += parseInt(profitData) || 0;
+                            monthlyTotals.profit += parseInt(profitData) || 0;
+                        }
+                        
+                        if (salesData) {
+                            const row = document.createElement('div');
+                            row.className = 'metric-row';
+                            row.innerHTML = `<span class="metric-label">売:</span><span class="sales-amount">¥${parseInt(salesData).toLocaleString()}</span>`;
+                            contentDiv.appendChild(row);
+                            weeklyTotals.sales += parseInt(salesData) || 0;
+                            monthlyTotals.sales += parseInt(salesData) || 0;
+                        }
+                        
+                        if (visitorsData || contractsData) {
+                            const row = document.createElement('div');
+                            row.className = 'metric-row';
+                            row.innerHTML = `<span class="metric-label">来/約:</span><span>${visitorsData || 0}/${contractsData || 0}</span>`;
+                            contentDiv.appendChild(row);
+                            weeklyTotals.visitors += parseInt(visitorsData) || 0;
+                            weeklyTotals.contracts += parseInt(contractsData) || 0;
+                            monthlyTotals.visitors += parseInt(visitorsData) || 0;
+                            monthlyTotals.contracts += parseInt(contractsData) || 0;
+                        }
+                        
+                        // Display expense total
+                        const expenseTotal = getExpenseTotal(dateStr);
+                        if (expenseTotal > 0) {
+                            const row = document.createElement('div');
+                            row.className = 'metric-row';
+                            row.innerHTML = `<span class="metric-label">経費:</span><span class="expense-amount">¥${expenseTotal.toLocaleString()}</span>`;
+                            contentDiv.appendChild(row);
+                            weeklyTotals.expenses += expenseTotal;
+                            monthlyTotals.expenses += expenseTotal;
+                        }
+                        
+                        cell.appendChild(dayDiv);
+                        cell.appendChild(contentDiv);
+                        
+                        // Add click event
+                        cell.onclick = () => openModal(dateStr, date, month, year);
+                        
+                        date++;
+                    }
+                    
+                    if (!cell.contains(dayDiv)) {
+                        cell.appendChild(dayDiv);
+                    }
+                }
+                
+                // Add weekly total cell
+                const weekTotalCell = row.insertCell();
+                weekTotalCell.className = 'weekly-total';
+                const weekId = `week-${year}-${month}-${week}`;
+                const weekData = getWeekData(weekId);
+                
+                // Always create week total cell for all 6 weeks
+                if (true) {
+                    const operatingProfit = weeklyTotals.profit - weeklyTotals.expenses;
+                    const prefectures = [
+                        '選択してください', '北海道', '青森', '岩手', '宮城', '秋田', '山形', '福島',
+                        '茨城', '栃木', '群馬', '埼玉', '千葉', '東京', '神奈川',
+                        '新潟', '富山', '石川', '福井', '山梨', '長野', '岐阜',
+                        '静岡', '愛知', '三重', '滋賀', '京都', '大阪', '兵庫',
+                        '奈良', '和歌山', '鳥取', '島根', '岡山', '広島', '山口',
+                        '徳島', '香川', '愛媛', '高知', '福岡', '佐賀', '長崎',
+                        '熊本', '大分', '宮崎', '鹿児島', '沖縄'
+                    ];
+                    
+                    let prefectureOptions = '';
+                    prefectures.forEach(pref => {
+                        const selected = weekData.prefecture === pref ? 'selected' : '';
+                        prefectureOptions += `<option value="${pref}" ${selected}>${pref}</option>`;
+                    });
+                    
+                    weekTotalCell.innerHTML = `
+                        <div style="font-size: 10px; padding: 5px;">
+                            <select class="week-prefecture" data-week="${weekId}" style="width: 100%; font-size: 9px; padding: 2px; margin-bottom: 3px; border: 1px solid #ec4899; background: white;">
+                                ${prefectureOptions}
+                            </select>
+                            <input type="text" class="week-store" data-week="${weekId}" placeholder="店舗名" value="${weekData.store || ''}" 
+                                   style="width: 100%; font-size: 9px; padding: 2px; margin-bottom: 3px; border: 1px solid #ec4899;">
+                            ${weeklyTotals.sales > 0 || weeklyTotals.purchase > 0 ? `
+                                <div style="border-top: 1px solid #ec4899; padding-top: 3px; margin-top: 3px;">
+                                    <div>買: ¥${weeklyTotals.purchase.toLocaleString()}</div>
+                                    <div>利: ¥${weeklyTotals.profit.toLocaleString()}</div>
+                                    <div>売: ¥${weeklyTotals.sales.toLocaleString()}</div>
+                                    <div>経: ¥${weeklyTotals.expenses.toLocaleString()}</div>
+                                    <div style="border-top: 1px solid #ec4899; margin-top: 3px; padding-top: 3px; font-weight: bold; color: ${operatingProfit >= 0 ? '#059669' : '#dc2626'};">営業利益: ¥${operatingProfit.toLocaleString()}</div>
+                                    <div>来/約: ${weeklyTotals.visitors}/${weeklyTotals.contracts}</div>
+                                </div>
+                            ` : '<div style="margin-top: 5px;">-</div>'}
+                        </div>
+                    `;
+                    
+                    // Add event listeners after innerHTML
+                    setTimeout(() => {
+                        const prefectureSelect = weekTotalCell.querySelector('.week-prefecture');
+                        const storeInput = weekTotalCell.querySelector('.week-store');
+                        
+                        if (prefectureSelect) {
+                            prefectureSelect.addEventListener('change', function() {
+                                saveWeekData(this.dataset.week, 'prefecture', this.value);
+                                showAutoSaveIndicator();
+                            });
+                        }
+                        
+                        if (storeInput) {
+                            storeInput.addEventListener('change', function() {
+                                saveWeekData(this.dataset.week, 'store', this.value);
+                                showAutoSaveIndicator();
+                            });
+                        }
+                    }, 100);
+                }
+                
+                // Always show all 6 weeks for consistency
+                // Don't hide any rows
+            }
+            
+            // Add monthly total row
+            const monthTotalRow = tbody.insertRow();
+            const monthLabelCell = monthTotalRow.insertCell();
+            monthLabelCell.colSpan = 7;
+            monthLabelCell.className = 'monthly-total';
+            monthLabelCell.style.textAlign = 'center';
+            monthLabelCell.innerHTML = '<strong>月間合計</strong>';
+            
+            const monthTotalCell = monthTotalRow.insertCell();
+            monthTotalCell.className = 'monthly-total';
+            const monthlyOperatingProfit = monthlyTotals.profit - monthlyTotals.expenses;
+            monthTotalCell.innerHTML = `
+                <div style="padding: 8px;">
+                    <div>買取: ¥${monthlyTotals.purchase.toLocaleString()}</div>
+                    <div>粗利益: ¥${monthlyTotals.profit.toLocaleString()}</div>
+                    <div>売上: ¥${monthlyTotals.sales.toLocaleString()}</div>
+                    <div>経費: ¥${monthlyTotals.expenses.toLocaleString()}</div>
+                    <div style="border-top: 1px solid #3b82f6; margin-top: 5px; padding-top: 5px; font-weight: bold; color: ${monthlyOperatingProfit >= 0 ? '#059669' : '#dc2626'};">
+                        営業利益: ¥${monthlyOperatingProfit.toLocaleString()}
+                    </div>
+                    <div>来店: ${monthlyTotals.visitors}人</div>
+                    <div>成約: ${monthlyTotals.contracts}件</div>
+                    <div>成約率: ${monthlyTotals.visitors > 0 ? Math.round((monthlyTotals.contracts / monthlyTotals.visitors) * 100) : 0}%</div>
+                </div>
+            `;
+            
+            updateStats();
+        }
+
+        function getSalesData(dateStr) {
+            return calendarData[dateStr]?.sales || '';
+        }
+
+        function getMemoData(dateStr) {
+            return calendarData[dateStr]?.memo || '';
+        }
+
+        function getPurchaseData(dateStr) {
+            return calendarData[dateStr]?.purchase || '';
+        }
+
+        function getProfitData(dateStr) {
+            return calendarData[dateStr]?.profit || '';
+        }
+
+        function getVisitorsData(dateStr) {
+            return calendarData[dateStr]?.visitors || '';
+        }
+
+        function getContractsData(dateStr) {
+            return calendarData[dateStr]?.contracts || '';
+        }
+
+        function getExpensesData(dateStr) {
+            return calendarData[dateStr]?.expenses || [];
+        }
+
+        function calculateSales() {
+            const purchase = parseInt(document.getElementById('modalPurchase').value) || 0;
+            const profit = parseInt(document.getElementById('modalProfit').value) || 0;
+            const sales = purchase + profit;
+            document.getElementById('modalSales').value = sales > 0 ? sales : '';
+        }
+
+        function addExpenseItem(name = '', amount = '') {
+            const expenseItems = document.getElementById('expenseItems');
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'expense-item';
+            
+            // Check if name is one of the predefined categories
+            const predefinedCategories = ['宿泊代', '出店料', 'チラシ', '販促品', '交通費', '飲食費'];
+            const isCustom = name && !predefinedCategories.includes(name);
+            
+            itemDiv.innerHTML = `
+                <select class="expense-category" onchange="handleCategoryChange(this); autoSaveModalData();" style="flex: 2;">
+                    <option value="">項目を選択</option>
+                    <option value="宿泊代" ${name === '宿泊代' ? 'selected' : ''}>宿泊代</option>
+                    <option value="出店料" ${name === '出店料' ? 'selected' : ''}>出店料</option>
+                    <option value="チラシ" ${name === 'チラシ' ? 'selected' : ''}>チラシ</option>
+                    <option value="販俁品" ${name === '販俁品' ? 'selected' : ''}>販俁品</option>
+                    <option value="交通費" ${name === '交通費' ? 'selected' : ''}>交通費</option>
+                    <option value="飲食費" ${name === '飲食費' ? 'selected' : ''}>飲食費</option>
+                    <option value="custom" ${isCustom ? 'selected' : ''}>その他（入力）</option>
+                </select>
+                <input type="text" class="expense-custom" placeholder="項目名を入力" value="${isCustom ? name : ''}" 
+                       style="flex: 2; display: ${isCustom ? 'block' : 'none'};" onchange="calculateExpenseTotal(); autoSaveModalData();">
+                <input type="number" class="expense-amount-input" placeholder="金額" value="${amount}" onchange="calculateExpenseTotal(); autoSaveModalData();">
+                <button class="remove-expense-btn" onclick="removeExpenseItem(this); autoSaveModalData();">削除</button>
+            `;
+            expenseItems.appendChild(itemDiv);
+            calculateExpenseTotal();
+        }
+        
+        function handleCategoryChange(select) {
+            const itemDiv = select.parentElement;
+            const customInput = itemDiv.querySelector('.expense-custom');
+            
+            if (select.value === 'custom') {
+                customInput.style.display = 'block';
+                select.style.display = 'none';
+                customInput.focus();
+            } else {
+                customInput.style.display = 'none';
+                select.style.display = 'block';
+                customInput.value = '';
+            }
+            calculateExpenseTotal();
+        }
+
+        function removeExpenseItem(button) {
+            button.parentElement.remove();
+            calculateExpenseTotal();
+        }
+
+        function calculateExpenseTotal() {
+            const expenseItems = document.querySelectorAll('.expense-item');
+            let total = 0;
+            expenseItems.forEach(item => {
+                const amount = parseInt(item.querySelector('.expense-amount-input').value) || 0;
+                total += amount;
+            });
+            document.getElementById('expenseTotal').textContent = `¥${total.toLocaleString()}`;
+        }
+
+        function loadExpenses(expenses) {
+            const expenseItems = document.getElementById('expenseItems');
+            expenseItems.innerHTML = '';
+            
+            if (expenses && expenses.length > 0) {
+                expenses.forEach(expense => {
+                    addExpenseItem(expense.name, expense.amount);
+                });
+            } else {
+                // Add one empty expense item by default
+                addExpenseItem();
+            }
+        }
+
+        function saveExpenses() {
+            const expenseItems = document.querySelectorAll('.expense-item');
+            const expenses = [];
+            
+            expenseItems.forEach(item => {
+                const categorySelect = item.querySelector('.expense-category');
+                const customInput = item.querySelector('.expense-custom');
+                const amount = item.querySelector('.expense-amount-input').value;
+                
+                let name = '';
+                if (categorySelect.value === 'custom') {
+                    name = customInput.value;
+                } else if (categorySelect.value) {
+                    name = categorySelect.value;
+                }
+                
+                if (name || amount) {
+                    expenses.push({ name, amount });
+                }
+            });
+            
+            return expenses;
+        }
+
+        function getExpenseTotal(dateStr) {
+            const expenses = getExpensesData(dateStr);
+            let total = 0;
+            if (expenses && expenses.length > 0) {
+                expenses.forEach(expense => {
+                    total += parseInt(expense.amount) || 0;
+                });
+            }
+            return total;
+        }
+
+        function openModal(dateStr, day, month, year) {
+            currentEditDate = dateStr;
+            const modal = document.getElementById('dayModal');
+            const modalTitle = document.getElementById('modalTitle');
+            
+            modalTitle.textContent = `${year}年${month}月${day}日のデータ`;
+            
+            // Load all data
+            document.getElementById('modalPurchase').value = getPurchaseData(dateStr);
+            document.getElementById('modalProfit').value = getProfitData(dateStr);
+            document.getElementById('modalSales').value = getSalesData(dateStr);
+            document.getElementById('modalVisitors').value = getVisitorsData(dateStr);
+            document.getElementById('modalContracts').value = getContractsData(dateStr);
+            document.getElementById('modalMemo').value = getMemoData(dateStr);
+            
+            // Load expenses
+            const expenses = getExpensesData(dateStr);
+            loadExpenses(expenses);
+            
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('dayModal').style.display = 'none';
+            currentEditDate = null;
+        }
+
+        function saveModalData() {
+            if (!currentEditDate) return;
+            
+            const purchase = document.getElementById('modalPurchase').value;
+            const profit = document.getElementById('modalProfit').value;
+            const sales = document.getElementById('modalSales').value;
+            const visitors = document.getElementById('modalVisitors').value;
+            const contracts = document.getElementById('modalContracts').value;
+            const memo = document.getElementById('modalMemo').value;
+            const expenses = saveExpenses();
+            
+            if (!calendarData[currentEditDate]) {
+                calendarData[currentEditDate] = {};
+            }
+            
+            calendarData[currentEditDate].purchase = purchase;
+            calendarData[currentEditDate].profit = profit;
+            calendarData[currentEditDate].sales = sales;
+            calendarData[currentEditDate].visitors = visitors;
+            calendarData[currentEditDate].contracts = contracts;
+            calendarData[currentEditDate].memo = memo;
+            calendarData[currentEditDate].expenses = expenses;
+            
+            closeModal();
+            updateCalendar();
+        }
+        
+        // Auto-save function for modal
+        function autoSaveModalData() {
+            if (!currentEditDate) return;
+            
+            const purchase = document.getElementById('modalPurchase').value;
+            const profit = document.getElementById('modalProfit').value;
+            const sales = document.getElementById('modalSales').value;
+            const visitors = document.getElementById('modalVisitors').value;
+            const contracts = document.getElementById('modalContracts').value;
+            const memo = document.getElementById('modalMemo').value;
+            const expenses = saveExpenses();
+            
+            if (!calendarData[currentEditDate]) {
+                calendarData[currentEditDate] = {};
+            }
+            
+            calendarData[currentEditDate].purchase = purchase;
+            calendarData[currentEditDate].profit = profit;
+            calendarData[currentEditDate].sales = sales;
+            calendarData[currentEditDate].visitors = visitors;
+            calendarData[currentEditDate].contracts = contracts;
+            calendarData[currentEditDate].memo = memo;
+            calendarData[currentEditDate].expenses = expenses;
+            
+            // Save to localStorage
+            localStorage.setItem('calendarData', JSON.stringify(calendarData));
+            
+            // Update calendar without closing modal
+            const year = parseInt(document.getElementById('year').value);
+            const month = parseInt(document.getElementById('month').value);
+            updateCalendarQuietly();
+            
+            // Show brief save indicator
+            showAutoSaveIndicator();
+        }
+        
+        function updateCalendarQuietly() {
+            // Update calendar without closing modal
+            const currentScrollPos = document.querySelector('.calendar-container').scrollTop;
+            updateCalendar();
+            document.querySelector('.calendar-container').scrollTop = currentScrollPos;
+        }
+        
+        function showAutoSaveIndicator() {
+            // Create or update auto-save indicator
+            let indicator = document.getElementById('autoSaveIndicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'autoSaveIndicator';
+                indicator.style.cssText = 'position: fixed; top: 10px; right: 10px; background: #10b981; color: white; padding: 8px 15px; border-radius: 5px; font-size: 12px; z-index: 10000; display: none;';
+                indicator.textContent = '✓ 自動保存されました';
+                document.body.appendChild(indicator);
+            }
+            
+            indicator.style.display = 'block';
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 2000);
+        }
+
+        function updateStats() {
+            const year = parseInt(document.getElementById('year').value);
+            const month = parseInt(document.getElementById('month').value);
+            
+            let salesTotal = 0;
+            let purchaseTotal = 0;
+            let profitTotal = 0;
+            let visitorsTotal = 0;
+            let contractsTotal = 0;
+            let expensesTotal = 0;
+            
+            for (const [dateStr, data] of Object.entries(calendarData)) {
+                const [y, m] = dateStr.split('-').map(Number);
+                if (y === year && m === month) {
+                    salesTotal += parseInt(data.sales) || 0;
+                    purchaseTotal += parseInt(data.purchase) || 0;
+                    profitTotal += parseInt(data.profit) || 0;
+                    visitorsTotal += parseInt(data.visitors) || 0;
+                    contractsTotal += parseInt(data.contracts) || 0;
+                    
+                    // Calculate expense total for this date
+                    if (data.expenses && data.expenses.length > 0) {
+                        data.expenses.forEach(expense => {
+                            expensesTotal += parseInt(expense.amount) || 0;
+                        });
+                    }
+                }
+            }
+            
+            const conversionRate = visitorsTotal > 0 ? Math.round((contractsTotal / visitorsTotal) * 100) : 0;
+            const operatingProfit = profitTotal - expensesTotal;
+            
+            document.getElementById('monthTotal').textContent = `¥${salesTotal.toLocaleString()}`;
+            document.getElementById('purchaseTotal').textContent = `¥${purchaseTotal.toLocaleString()}`;
+            document.getElementById('profitTotal').textContent = `¥${profitTotal.toLocaleString()}`;
+            document.getElementById('expenseTotal').textContent = `¥${expensesTotal.toLocaleString()}`;
+            
+            const operatingProfitEl = document.getElementById('operatingProfitTotal');
+            operatingProfitEl.textContent = `¥${operatingProfit.toLocaleString()}`;
+            operatingProfitEl.style.color = operatingProfit >= 0 ? '#059669' : '#dc2626';
+            
+            document.getElementById('visitorsTotal').textContent = `${visitorsTotal}人`;
+            document.getElementById('contractsTotal').textContent = `${contractsTotal}件`;
+            document.getElementById('conversionRate').textContent = `${conversionRate}%`;
+        }
+
+        function saveAllData() {
+            localStorage.setItem('calendarData', JSON.stringify(calendarData));
+            localStorage.setItem('weeklyData', JSON.stringify(weeklyData));
+            showMessage('データをバックアップしました！', 'success');
+        }
+
+        function loadData() {
+            const savedData = localStorage.getItem('calendarData');
+            if (savedData) {
+                calendarData = JSON.parse(savedData);
+            }
+            const savedWeeklyData = localStorage.getItem('weeklyData');
+            if (savedWeeklyData) {
+                weeklyData = JSON.parse(savedWeeklyData);
+            }
+        }
+        
+        function getWeekData(weekId) {
+            return weeklyData[weekId] || { prefecture: '', store: '' };
+        }
+        
+        function saveWeekData(weekId, field, value) {
+            if (!weeklyData[weekId]) {
+                weeklyData[weekId] = {};
+            }
+            weeklyData[weekId][field] = value;
+            localStorage.setItem('weeklyData', JSON.stringify(weeklyData));
+        }
+
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = 'message ' + type;
+            messageEl.style.display = 'block';
+            
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 3000);
+        }
+
+        // Yearly summary functions
+        function openYearlySummary() {
+            const modal = document.getElementById('yearlyModal');
+            const currentYear = new Date().getFullYear();
+            document.getElementById('yearSelect').value = currentYear;
+            updateYearlySummary();
+            modal.style.display = 'block';
+        }
+
+        function closeYearlyModal() {
+            document.getElementById('yearlyModal').style.display = 'none';
+        }
+
+        function updateYearlySummary() {
+            const year = parseInt(document.getElementById('yearSelect').value);
+            const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+            
+            let yearlyTotals = {
+                sales: 0,
+                purchase: 0,
+                profit: 0,
+                expenses: 0,
+                visitors: 0,
+                contracts: 0
+            };
+            
+            let monthlyData = [];
+            
+            // Calculate monthly totals
+            for (let month = 1; month <= 12; month++) {
+                let monthData = {
+                    month: months[month - 1],
+                    sales: 0,
+                    purchase: 0,
+                    profit: 0,
+                    expenses: 0,
+                    visitors: 0,
+                    contracts: 0
+                };
+                
+                for (const [dateStr, data] of Object.entries(calendarData)) {
+                    const [y, m] = dateStr.split('-').map(Number);
+                    if (y === year && m === month) {
+                        monthData.sales += parseInt(data.sales) || 0;
+                        monthData.purchase += parseInt(data.purchase) || 0;
+                        monthData.profit += parseInt(data.profit) || 0;
+                        monthData.visitors += parseInt(data.visitors) || 0;
+                        monthData.contracts += parseInt(data.contracts) || 0;
+                        
+                        if (data.expenses && data.expenses.length > 0) {
+                            data.expenses.forEach(expense => {
+                                monthData.expenses += parseInt(expense.amount) || 0;
+                            });
+                        }
+                    }
+                }
+                
+                monthData.operatingProfit = monthData.profit - monthData.expenses;
+                monthData.conversionRate = monthData.visitors > 0 ? Math.round((monthData.contracts / monthData.visitors) * 100) : 0;
+                
+                monthlyData.push(monthData);
+                
+                // Add to yearly totals
+                yearlyTotals.sales += monthData.sales;
+                yearlyTotals.purchase += monthData.purchase;
+                yearlyTotals.profit += monthData.profit;
+                yearlyTotals.expenses += monthData.expenses;
+                yearlyTotals.visitors += monthData.visitors;
+                yearlyTotals.contracts += monthData.contracts;
+            }
+            
+            yearlyTotals.operatingProfit = yearlyTotals.profit - yearlyTotals.expenses;
+            yearlyTotals.conversionRate = yearlyTotals.visitors > 0 ? Math.round((yearlyTotals.contracts / yearlyTotals.visitors) * 100) : 0;
+            
+            // Generate HTML
+            let html = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0;">${year}年 売上サマリー</h3>
+                    <div style="font-size: 16px; font-weight: bold; color: ${yearlyTotals.operatingProfit >= 0 ? '#059669' : '#dc2626'};">
+                        年間営業利益: ¥${yearlyTotals.operatingProfit.toLocaleString()}
+                    </div>
+                </div>
+                <table class="yearly-summary-table">
+                    <thead>
+                        <tr>
+                            <th>月</th>
+                            <th>売上</th>
+                            <th>買取額</th>
+                            <th>粗利益</th>
+                            <th>経費</th>
+                            <th>営業利益</th>
+                            <th>来店数</th>
+                            <th>成約数</th>
+                            <th>成約率</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            monthlyData.forEach(data => {
+                const profitClass = data.operatingProfit >= 0 ? 'profit-positive' : 'profit-negative';
+                html += `
+                    <tr>
+                        <td>${data.month}</td>
+                        <td>¥${data.sales.toLocaleString()}</td>
+                        <td>¥${data.purchase.toLocaleString()}</td>
+                        <td>¥${data.profit.toLocaleString()}</td>
+                        <td>¥${data.expenses.toLocaleString()}</td>
+                        <td class="${profitClass}">¥${data.operatingProfit.toLocaleString()}</td>
+                        <td>${data.visitors}人</td>
+                        <td>${data.contracts}件</td>
+                        <td>${data.conversionRate}%</td>
+                    </tr>
+                `;
+            });
+            
+            const yearlyProfitClass = yearlyTotals.operatingProfit >= 0 ? 'profit-positive' : 'profit-negative';
+            html += `
+                    <tr class="yearly-total-row">
+                        <td>年間合計</td>
+                        <td>¥${yearlyTotals.sales.toLocaleString()}</td>
+                        <td>¥${yearlyTotals.purchase.toLocaleString()}</td>
+                        <td>¥${yearlyTotals.profit.toLocaleString()}</td>
+                        <td>¥${yearlyTotals.expenses.toLocaleString()}</td>
+                        <td class="${yearlyProfitClass}">¥${yearlyTotals.operatingProfit.toLocaleString()}</td>
+                        <td>${yearlyTotals.visitors}人</td>
+                        <td>${yearlyTotals.contracts}件</td>
+                        <td>${yearlyTotals.conversionRate}%</td>
+                    </tr>
+                </tbody>
+                </table>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #f9fafb; border-radius: 8px;">
+                    <h4 style="margin-bottom: 10px;">年間サマリー</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>月平均売上: ¥${Math.round(yearlyTotals.sales / 12).toLocaleString()}</div>
+                        <div>月平均買取額: ¥${Math.round(yearlyTotals.purchase / 12).toLocaleString()}</div>
+                        <div>月平均粗利益: ¥${Math.round(yearlyTotals.profit / 12).toLocaleString()}</div>
+                        <div style="color: ${yearlyTotals.operatingProfit >= 0 ? '#059669' : '#dc2626'}; font-weight: bold;">
+                            月平均営業利益: ¥${Math.round(yearlyTotals.operatingProfit / 12).toLocaleString()}
+                            ${yearlyTotals.operatingProfit < 0 ? '（赤字）' : ''}
+                        </div>
+                        <div style="color: ${yearlyTotals.operatingProfit >= 0 ? 'inherit' : '#dc2626'};">
+                            年間営業利益率: ${yearlyTotals.sales > 0 ? Math.round((yearlyTotals.operatingProfit / yearlyTotals.sales) * 100) : 0}%
+                        </div>
+                        <div>年間成約率: ${yearlyTotals.conversionRate}%</div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('yearlySummaryContent').innerHTML = html;
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const dayModal = document.getElementById('dayModal');
+            const yearlyModal = document.getElementById('yearlyModal');
+            if (event.target === dayModal) {
+                closeModal();
+            } else if (event.target === yearlyModal) {
+                closeYearlyModal();
+            }
+        }
+
+        // Initialize with current date
+        window.onload = function() {
+            const today = new Date();
+            document.getElementById('year').value = today.getFullYear();
+            document.getElementById('month').value = today.getMonth() + 1;
+        };
+    </script>
+</body>
+</html>
