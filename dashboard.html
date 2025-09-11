@@ -1721,31 +1721,19 @@
                         </div>
 
                         <!-- 左右分割コンテナ -->
+                        <!-- 登録ボタン -->
+                        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                            <button class="btn-primary" onclick="openDepositModal()" style="background: #10b981; padding: 12px 24px; font-size: 16px;">
+                                💰 入金を登録
+                            </button>
+                            <button class="btn-primary" onclick="openWithdrawModal()" style="background: #ef4444; padding: 12px 24px; font-size: 16px;">
+                                💸 出金を登録
+                            </button>
+                        </div>
+
                         <div class="cashflow-split-container">
                             <!-- 左側：入金 -->
                             <div class="cashflow-column">
-                                <!-- 入金セクション -->
-                                <div class="cashflow-section">
-                                    <h2 class="section-title">入金登録</h2>
-                                    <div class="deposit-form">
-                                        <div class="form-column">
-                                            <div class="form-group">
-                                                <label for="depositDate">入金日</label>
-                                                <input type="date" id="depositDate" class="form-control">
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="depositAmount">入金額</label>
-                                                <input type="number" id="depositAmount" class="form-control" placeholder="例: 100000">
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="depositNote">備考（任意）</label>
-                                                <input type="text" id="depositNote" class="form-control" placeholder="メモを入力">
-                                            </div>
-                                            <button class="btn-primary" onclick="addDeposit()" style="margin-top: 10px;">入金を登録</button>
-                                        </div>
-                                    </div>
-                                </div>
-
                                 <!-- 入金履歴テーブル -->
                                 <div class="cashflow-section">
                                     <h2 class="section-title"><span id="depositMonthTitle">入金履歴</span></h2>
@@ -1780,28 +1768,6 @@
 
                             <!-- 右側：出金 -->
                             <div class="cashflow-column">
-                                <!-- 出金セクション -->
-                                <div class="cashflow-section">
-                                    <h2 class="section-title">出金登録</h2>
-                                    <div class="withdraw-form">
-                                        <div class="form-column">
-                                            <div class="form-group">
-                                                <label for="withdrawDate">出金日</label>
-                                                <input type="date" id="withdrawDate" class="form-control">
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="withdrawAmount">出金額</label>
-                                                <input type="number" id="withdrawAmount" class="form-control" placeholder="例: 50000">
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="withdrawNote">備考（任意）</label>
-                                                <input type="text" id="withdrawNote" class="form-control" placeholder="メモを入力">
-                                            </div>
-                                            <button class="btn-primary" onclick="addWithdraw()" style="margin-top: 10px;">出金を登録</button>
-                                        </div>
-                                    </div>
-                                </div>
-
                                 <!-- 出金履歴テーブル -->
                                 <div class="cashflow-section">
                                     <h2 class="section-title"><span id="withdrawMonthTitle">出金履歴</span></h2>
@@ -1882,6 +1848,62 @@
                 <div id="yearlySummaryContent" style="margin-top: 20px;">
                     <!-- Yearly summary will be displayed here -->
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for deposit registration -->
+    <div id="depositModal" class="modal">
+        <div class="modal-content" style="width: 500px; max-width: 90%;">
+            <div class="modal-header">
+                <h2>入金登録</h2>
+                <span class="close" onclick="closeDepositModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="modalDepositDate">入金日</label>
+                    <input type="date" id="modalDepositDate" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="modalDepositAmount">入金額</label>
+                    <input type="number" id="modalDepositAmount" class="form-control" placeholder="例: 100000">
+                </div>
+                <div class="form-group">
+                    <label for="modalDepositNote">備考（任意）</label>
+                    <input type="text" id="modalDepositNote" class="form-control" placeholder="メモを入力">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" onclick="closeDepositModal()">キャンセル</button>
+                <button class="modal-btn save" onclick="saveDepositFromModal()">登録</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for withdraw registration -->
+    <div id="withdrawModal" class="modal">
+        <div class="modal-content" style="width: 500px; max-width: 90%;">
+            <div class="modal-header">
+                <h2>出金登録</h2>
+                <span class="close" onclick="closeWithdrawModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="modalWithdrawDate">出金日</label>
+                    <input type="date" id="modalWithdrawDate" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="modalWithdrawAmount">出金額</label>
+                    <input type="number" id="modalWithdrawAmount" class="form-control" placeholder="例: 50000">
+                </div>
+                <div class="form-group">
+                    <label for="modalWithdrawNote">備考（任意）</label>
+                    <input type="text" id="modalWithdrawNote" class="form-control" placeholder="メモを入力">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" onclick="closeWithdrawModal()">キャンセル</button>
+                <button class="modal-btn save" onclick="saveWithdrawFromModal()">登録</button>
             </div>
         </div>
     </div>
@@ -2997,6 +3019,85 @@
             } else if (event.target === yearlyModal) {
                 closeYearlyModal();
             }
+        }
+
+        // Modal functions for deposit and withdraw
+        function openDepositModal() {
+            const modal = document.getElementById('depositModal');
+            modal.style.display = 'block';
+            
+            // Set today's date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('modalDepositDate').value = today;
+            document.getElementById('modalDepositAmount').value = '';
+            document.getElementById('modalDepositNote').value = '';
+        }
+        
+        function closeDepositModal() {
+            document.getElementById('depositModal').style.display = 'none';
+        }
+        
+        function openWithdrawModal() {
+            const modal = document.getElementById('withdrawModal');
+            modal.style.display = 'block';
+            
+            // Set today's date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('modalWithdrawDate').value = today;
+            document.getElementById('modalWithdrawAmount').value = '';
+            document.getElementById('modalWithdrawNote').value = '';
+        }
+        
+        function closeWithdrawModal() {
+            document.getElementById('withdrawModal').style.display = 'none';
+        }
+        
+        function saveDepositFromModal() {
+            const date = document.getElementById('modalDepositDate').value;
+            const amount = document.getElementById('modalDepositAmount').value;
+            const note = document.getElementById('modalDepositNote').value;
+            
+            if (!date || !amount) {
+                alert('入金日と入金額は必須項目です');
+                return;
+            }
+            
+            const deposit = {
+                id: Date.now(),
+                date: date,
+                amount: parseInt(amount),
+                note: note || '',
+                createdAt: new Date().toISOString()
+            };
+            
+            depositData.push(deposit);
+            saveDepositData();
+            updateDepositTable();
+            closeDepositModal();
+        }
+        
+        function saveWithdrawFromModal() {
+            const date = document.getElementById('modalWithdrawDate').value;
+            const amount = document.getElementById('modalWithdrawAmount').value;
+            const note = document.getElementById('modalWithdrawNote').value;
+            
+            if (!date || !amount) {
+                alert('出金日と出金額は必須項目です');
+                return;
+            }
+            
+            const withdraw = {
+                id: Date.now(),
+                date: date,
+                amount: parseInt(amount),
+                note: note || '',
+                createdAt: new Date().toISOString()
+            };
+            
+            withdrawData.push(withdraw);
+            saveWithdrawData();
+            updateWithdrawTable();
+            closeWithdrawModal();
         }
 
         // Deposit management functions
