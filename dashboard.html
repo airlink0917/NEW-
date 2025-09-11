@@ -2809,6 +2809,7 @@
                 
                 monthData.operatingProfit = monthData.profit - monthData.expenses;
                 monthData.conversionRate = monthData.visitors > 0 ? Math.round((monthData.contracts / monthData.visitors) * 100) : 0;
+                monthData.purchaseRate = monthData.sales > 0 ? Math.round((monthData.purchase / monthData.sales) * 100) : 0;
                 
                 monthlyData.push(monthData);
                 
@@ -2823,6 +2824,7 @@
             
             yearlyTotals.operatingProfit = yearlyTotals.profit - yearlyTotals.expenses;
             yearlyTotals.conversionRate = yearlyTotals.visitors > 0 ? Math.round((yearlyTotals.contracts / yearlyTotals.visitors) * 100) : 0;
+            yearlyTotals.purchaseRate = yearlyTotals.sales > 0 ? Math.round((yearlyTotals.purchase / yearlyTotals.sales) * 100) : 0;
             
             // Generate HTML
             let html = `
@@ -2838,6 +2840,7 @@
                             <th>月</th>
                             <th>売上</th>
                             <th>買取額</th>
+                            <th>買取率</th>
                             <th>粗利益</th>
                             <th>経費</th>
                             <th>営業利益</th>
@@ -2856,6 +2859,7 @@
                         <td>${data.month}</td>
                         <td>¥${data.sales.toLocaleString()}</td>
                         <td>¥${data.purchase.toLocaleString()}</td>
+                        <td>${data.purchaseRate}%</td>
                         <td>¥${data.profit.toLocaleString()}</td>
                         <td>¥${data.expenses.toLocaleString()}</td>
                         <td class="${profitClass}">¥${data.operatingProfit.toLocaleString()}</td>
@@ -2872,6 +2876,7 @@
                         <td>年間合計</td>
                         <td>¥${yearlyTotals.sales.toLocaleString()}</td>
                         <td>¥${yearlyTotals.purchase.toLocaleString()}</td>
+                        <td>${yearlyTotals.purchaseRate}%</td>
                         <td>¥${yearlyTotals.profit.toLocaleString()}</td>
                         <td>¥${yearlyTotals.expenses.toLocaleString()}</td>
                         <td class="${yearlyProfitClass}">¥${yearlyTotals.operatingProfit.toLocaleString()}</td>
@@ -2894,6 +2899,9 @@
                         </div>
                         <div style="color: ${yearlyTotals.operatingProfit >= 0 ? 'inherit' : '#dc2626'};">
                             年間営業利益率: ${yearlyTotals.sales > 0 ? Math.round((yearlyTotals.operatingProfit / yearlyTotals.sales) * 100) : 0}%
+                        </div>
+                        <div style="color: ${yearlyTotals.purchaseRate > 70 ? '#dc2626' : yearlyTotals.purchaseRate > 50 ? '#f59e0b' : '#059669'}; font-weight: bold;">
+                            年間買取率: ${yearlyTotals.purchaseRate}%
                         </div>
                         <div>年間成約率: ${yearlyTotals.conversionRate}%</div>
                     </div>
