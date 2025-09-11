@@ -1589,10 +1589,10 @@
                     <button class="toggle-sidebar" onclick="toggleSidebar()" style="display: none;">☰</button>
                 </div>
                 <div class="sidebar-menu">
-                    <button class="menu-item active" onclick="showSection('calendar', event)">
+                    <button class="menu-item active" onclick="showSection('calendar')">
                         <span>売上管理</span>
                     </button>
-                    <button class="menu-item" onclick="showSection('cashflow', event)">
+                    <button class="menu-item" onclick="showSection('cashflow')">
                         <span>入出金</span>
                     </button>
                 </div>
@@ -2022,7 +2022,7 @@
         }
         
         // Function to show different sections
-        function showSection(section, event) {
+        function showSection(section) {
             // Close mobile menu if open
             if (window.innerWidth <= 768) {
                 closeMobileMenu();
@@ -2038,13 +2038,13 @@
                 sec.classList.remove('active');
             });
             
-            // Add active class to clicked menu item if event exists
-            if (event && event.target) {
-                const menuItem = event.target.closest('.menu-item');
-                if (menuItem) {
-                    menuItem.classList.add('active');
+            // Add active class to the menu item for this section
+            document.querySelectorAll('.menu-item').forEach(item => {
+                if ((section === 'calendar' && item.textContent.includes('売上管理')) ||
+                    (section === 'cashflow' && item.textContent.includes('入出金'))) {
+                    item.classList.add('active');
                 }
-            }
+            });
             
             // Show the selected section
             if (section === 'calendar') {
