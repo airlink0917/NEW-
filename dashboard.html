@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <title>売上カレンダー管理ダッシュボード</title>
@@ -79,12 +79,118 @@
 
         .dashboard {
             display: none;
+            background: #f3f4f6;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .dashboard-container {
+            display: flex;
+            height: 100%;
+        }
+
+        .sidebar {
+            width: 250px;
             background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s;
+        }
+
+        .sidebar.collapsed {
+            width: 60px;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            transition: opacity 0.3s;
+        }
+
+        .sidebar.collapsed .sidebar-title {
+            opacity: 0;
+        }
+
+        .toggle-sidebar {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 5px;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+
+        .menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            color: #4b5563;
+            text-decoration: none;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .menu-item:hover {
+            background: #f3f4f6;
+        }
+
+        .menu-item.active {
+            background: #eef2ff;
+            color: #667eea;
+            border-left: 3px solid #667eea;
+        }
+
+        .menu-item span {
+            transition: opacity 0.3s;
+        }
+
+        .sidebar.collapsed .menu-item span {
+            display: none;
+        }
+
+        .sidebar.collapsed .menu-item {
+            padding: 12px;
+            justify-content: center;
+        }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
             padding: 30px;
+            background: white;
+            margin: 20px;
             border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            width: 95%;
-            max-width: 1400px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
         }
 
         .dashboard-header {
@@ -203,16 +309,416 @@
             font-weight: bold;
         }
 
+        /* Cashflow Styles */
+        .cashflow-container {
+            padding: 20px;
+        }
+
+        .month-selector-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .month-selector {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .month-selector .form-group {
+            margin-bottom: 0;
+        }
+
+        .month-selector .form-control {
+            width: 120px;
+        }
+
+        .cashflow-section {
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .deposit-form, .withdraw-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .withdraw-amount {
+            color: #dc2626 !important;
+            font-weight: bold;
+        }
+
+        .deposit-amount {
+            color: #059669 !important;
+            font-weight: bold;
+        }
+
+        .calendar-deposit {
+            color: #059669;
+            font-weight: bold;
+            background: #d1fae5;
+            padding: 1px 3px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-top: 2px;
+        }
+
+        .summary-section {
+            background: white !important;
+            border: 2px solid #667eea;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .summary-label {
+            font-weight: 500;
+            color: #4b5563;
+        }
+
+        .summary-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .cashflow-split-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .cashflow-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+
+        .form-column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        @media screen and (max-width: 1024px) {
+            .cashflow-split-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .cashflow-table {
+                font-size: 12px;
+            }
+            
+            .cashflow-table th,
+            .cashflow-table td {
+                padding: 8px 6px;
+            }
+        }
+        
+        @media screen and (max-width: 768px) {
+            .cashflow-container {
+                padding: 10px;
+            }
+            
+            .month-selector-section {
+                padding: 15px;
+            }
+            
+            .month-selector {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .month-selector .form-group {
+                width: 100%;
+            }
+            
+            .month-selector .form-control {
+                width: 100%;
+            }
+            
+            .month-selector button {
+                width: 48%;
+            }
+            
+            .cashflow-section {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .form-column {
+                gap: 10px;
+            }
+            
+            .btn-primary {
+                width: 100%;
+                padding: 12px;
+                font-size: 16px;
+            }
+            
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .cashflow-table {
+                min-width: 500px;
+                font-size: 11px;
+            }
+            
+            .cashflow-table th,
+            .cashflow-table td {
+                padding: 8px 4px;
+            }
+            
+            .btn-edit,
+            .btn-delete {
+                padding: 6px 8px;
+                font-size: 11px;
+                margin: 2px;
+            }
+            
+            .summary-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 15px;
+            }
+            
+            .summary-item {
+                padding: 12px;
+            }
+            
+            .summary-value {
+                font-size: 16px;
+            }
+        }
+        
+        @media screen and (max-width: 480px) {
+            .section-title {
+                font-size: 16px;
+                margin-bottom: 15px;
+            }
+            
+            .form-control {
+                padding: 12px;
+                font-size: 16px;
+            }
+            
+            .cashflow-table {
+                font-size: 10px;
+            }
+            
+            .total-section {
+                padding: 12px;
+            }
+            
+            .total-value {
+                font-size: 18px;
+            }
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-primary {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            overflow-x: auto;
+            overflow-y: visible;
+            border: 1px solid #e5e7eb;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .cashflow-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .cashflow-table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .cashflow-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        .cashflow-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .no-data-message {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .total-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .total-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 16px;
+        }
+
+        .total-label {
+            font-weight: 500;
+            color: #4b5563;
+        }
+
+        .total-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #059669;
+        }
+
+        .btn-delete {
+            padding: 5px 10px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+
+        .btn-edit {
+            padding: 5px 10px;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-right: 5px;
+        }
+
+        .btn-edit:hover {
+            background: #d97706;
+        }
+
         /* Mobile Responsive Styles */
         @media screen and (max-width: 768px) {
-            .dashboard {
-                width: 100%;
+            .sidebar {
+                width: 60px;
+            }
+            
+            .sidebar-title {
+                display: none;
+            }
+            
+            .menu-item span {
+                display: none;
+            }
+            
+            .menu-item {
+                padding: 12px;
+                justify-content: center;
+            }
+            
+            .main-content {
+                margin: 10px;
                 padding: 15px;
-                border-radius: 0;
             }
 
             .dashboard h1 {
-                font-size: 20px;
+                font-size: 18px;
+            }
+            
+            .dashboard-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                padding-bottom: 15px;
+            }
+            
+            .logout-btn {
+                padding: 8px 12px;
+                font-size: 12px;
             }
 
             .calendar-controls {
@@ -326,17 +832,16 @@
                 padding: 5px;
                 font-size: 10px;
             }
-
-            .logout-btn {
-                padding: 6px 12px;
-                font-size: 12px;
-            }
         }
 
         @media screen and (max-width: 480px) {
             .dashboard-header {
-                flex-direction: column;
+                flex-direction: row;
                 gap: 10px;
+            }
+            
+            .dashboard h1 {
+                font-size: 16px;
             }
 
             .calendar td {
@@ -369,9 +874,18 @@
             .modal-btn,
             .add-expense-btn,
             .remove-expense-btn,
-            .btn {
+            .btn,
+            .btn-primary,
+            .btn-edit,
+            .btn-delete {
                 min-height: 44px;
                 font-size: 14px;
+            }
+            
+            .btn-edit,
+            .btn-delete {
+                min-height: 36px;
+                padding: 8px 12px;
             }
 
             .calendar td {
@@ -382,10 +896,18 @@
             input[type="number"],
             input[type="text"],
             input[type="password"],
+            input[type="date"],
             select,
             textarea {
                 min-height: 44px;
                 font-size: 16px; /* Prevents zoom on iOS */
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+            }
+            
+            input[type="date"] {
+                padding: 12px;
             }
         }
 
@@ -470,6 +992,26 @@
         .calendar td.today {
             background: #fef3c7;
             border: 2px solid #f59e0b;
+        }
+
+        .calendar td.holiday {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+        }
+
+        .calendar td.holiday .day-number {
+            color: #dc2626 !important;
+            font-weight: bold;
+        }
+
+        .holiday-name {
+            color: #dc2626;
+            font-size: 9px;
+            font-weight: bold;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .day-number {
@@ -783,10 +1325,28 @@
     </div>
 
     <div class="dashboard" id="dashboard">
-        <div class="dashboard-header">
-            <h1>売上カレンダー ダッシュボード</h1>
-            <button class="logout-btn" onclick="logout()">ログアウト</button>
-        </div>
+        <div class="dashboard-container">
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <span class="sidebar-title">メニュー</span>
+                    <button class="toggle-sidebar" onclick="toggleSidebar()">☰</button>
+                </div>
+                <div class="sidebar-menu">
+                    <button class="menu-item active" onclick="showSection('calendar')">
+                        <span>売上カレンダー</span>
+                    </button>
+                    <button class="menu-item" onclick="showSection('cashflow')">
+                        <span>入出金</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <div class="content-section active" id="calendar-section">
+                    <div class="dashboard-header">
+                        <h1>売上カレンダー ダッシュボード</h1>
+                        <button class="logout-btn" onclick="logout()">ログアウト</button>
+                    </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <button class="nav-btn" onclick="openYearlySummary()" style="background: #10b981;">
@@ -878,9 +1438,184 @@
             </div>
         </div>
 
-        <button class="nav-btn" onclick="saveAllData()" style="margin-top: 20px; background: #6b7280;">手動バックアップ</button>
-        <div style="font-size: 12px; color: #10b981; margin-top: 5px; text-align: center;">※ データは自動保存されています</div>
-        <div class="message" id="message"></div>
+                    <button class="nav-btn" onclick="saveAllData()" style="margin-top: 20px; background: #6b7280;">手動バックアップ</button>
+                    <div style="font-size: 12px; color: #10b981; margin-top: 5px; text-align: center;">※ データは自動保存されています</div>
+                    <div class="message" id="message"></div>
+                </div>
+                
+                <div class="content-section" id="cashflow-section">
+                    <div class="dashboard-header">
+                        <h1>入出金管理</h1>
+                        <button class="logout-btn" onclick="logout()">ログアウト</button>
+                    </div>
+                    
+                    <div class="cashflow-container">
+                        <!-- 月選択セクション -->
+                        <div class="month-selector-section">
+                            <div class="month-selector">
+                                <div class="form-group">
+                                    <label for="cashflowYear">年</label>
+                                    <input type="number" id="cashflowYear" class="form-control" min="2020" max="2030" value="2025" onchange="updateDepositDisplay()">
+                                </div>
+                                <div class="form-group">
+                                    <label for="cashflowMonth">月</label>
+                                    <select id="cashflowMonth" class="form-control" onchange="updateDepositDisplay()">
+                                        <option value="1">1月</option>
+                                        <option value="2">2月</option>
+                                        <option value="3">3月</option>
+                                        <option value="4">4月</option>
+                                        <option value="5">5月</option>
+                                        <option value="6">6月</option>
+                                        <option value="7">7月</option>
+                                        <option value="8">8月</option>
+                                        <option value="9">9月</option>
+                                        <option value="10">10月</option>
+                                        <option value="11">11月</option>
+                                        <option value="12">12月</option>
+                                    </select>
+                                </div>
+                                <button class="btn-primary" onclick="changeDepositMonth(-1)">◀ 前月</button>
+                                <button class="btn-primary" onclick="changeDepositMonth(1)">次月 ▶</button>
+                            </div>
+                        </div>
+
+                        <!-- 左右分割コンテナ -->
+                        <div class="cashflow-split-container">
+                            <!-- 左側：入金 -->
+                            <div class="cashflow-column">
+                                <!-- 入金セクション -->
+                                <div class="cashflow-section">
+                                    <h2 class="section-title">入金登録</h2>
+                                    <div class="deposit-form">
+                                        <div class="form-column">
+                                            <div class="form-group">
+                                                <label for="depositDate">入金日</label>
+                                                <input type="date" id="depositDate" class="form-control">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="depositAmount">入金額</label>
+                                                <input type="number" id="depositAmount" class="form-control" placeholder="例: 100000">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="depositNote">備考（任意）</label>
+                                                <input type="text" id="depositNote" class="form-control" placeholder="メモを入力">
+                                            </div>
+                                            <button class="btn-primary" onclick="addDeposit()" style="margin-top: 10px;">入金を登録</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 入金履歴テーブル -->
+                                <div class="cashflow-section">
+                                    <h2 class="section-title"><span id="depositMonthTitle">入金履歴</span></h2>
+                                    <div class="table-container">
+                                        <table class="cashflow-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>入金日</th>
+                                                    <th>入金額</th>
+                                                    <th>備考</th>
+                                                    <th>操作</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="depositTableBody">
+                                                <!-- 入金データが動的に追加される -->
+                                            </tbody>
+                                        </table>
+                                        <div id="noDepositData" class="no-data-message">
+                                            入金データがありません
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 合計表示 -->
+                                    <div class="total-section">
+                                        <div class="total-item">
+                                            <span class="total-label"><span id="depositMonthLabel">月間</span>入金合計:</span>
+                                            <span class="total-value" id="totalDeposit">¥0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 右側：出金 -->
+                            <div class="cashflow-column">
+                                <!-- 出金セクション -->
+                                <div class="cashflow-section">
+                                    <h2 class="section-title">出金登録</h2>
+                                    <div class="withdraw-form">
+                                        <div class="form-column">
+                                            <div class="form-group">
+                                                <label for="withdrawDate">出金日</label>
+                                                <input type="date" id="withdrawDate" class="form-control">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="withdrawAmount">出金額</label>
+                                                <input type="number" id="withdrawAmount" class="form-control" placeholder="例: 50000">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="withdrawNote">備考（任意）</label>
+                                                <input type="text" id="withdrawNote" class="form-control" placeholder="メモを入力">
+                                            </div>
+                                            <button class="btn-primary" onclick="addWithdraw()" style="margin-top: 10px;">出金を登録</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 出金履歴テーブル -->
+                                <div class="cashflow-section">
+                                    <h2 class="section-title"><span id="withdrawMonthTitle">出金履歴</span></h2>
+                                    <div class="table-container">
+                                        <table class="cashflow-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>出金日</th>
+                                                    <th>出金額</th>
+                                                    <th>備考</th>
+                                                    <th>操作</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="withdrawTableBody">
+                                                <!-- 出金データが動的に追加される -->
+                                            </tbody>
+                                        </table>
+                                        <div id="noWithdrawData" class="no-data-message">
+                                            出金データがありません
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 合計表示 -->
+                                    <div class="total-section">
+                                        <div class="total-item">
+                                            <span class="total-label"><span id="withdrawMonthLabel">月間</span>出金合計:</span>
+                                            <span class="total-value withdraw-amount" id="totalWithdraw">-¥0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 収支サマリー -->
+                        <div class="cashflow-section summary-section">
+                            <h2 class="section-title">収支サマリー</h2>
+                            <div class="summary-grid">
+                                <div class="summary-item">
+                                    <span class="summary-label">入金合計:</span>
+                                    <span class="summary-value deposit-amount" id="summaryDeposit">¥0</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">出金合計:</span>
+                                    <span class="summary-value withdraw-amount" id="summaryWithdraw">-¥0</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">収支:</span>
+                                    <span class="summary-value" id="summaryBalance">¥0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal for yearly summary -->
@@ -975,6 +1710,176 @@
         // Data storage - simplified to single data store
         let calendarData = {};
         let weeklyData = {};
+        let depositData = [];
+        let withdrawData = [];
+
+        // Function to toggle sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+        
+        // Function to show different sections
+        function showSection(section) {
+            // Remove active class from all menu items
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Remove active class from all content sections
+            document.querySelectorAll('.content-section').forEach(sec => {
+                sec.classList.remove('active');
+            });
+            
+            // Add active class to clicked menu item
+            event.target.closest('.menu-item').classList.add('active');
+            
+            // Show the selected section
+            if (section === 'calendar') {
+                document.getElementById('calendar-section').classList.add('active');
+            } else if (section === 'cashflow') {
+                document.getElementById('cashflow-section').classList.add('active');
+            }
+        }
+        
+        // Japanese holidays data (2024-2030)
+        const japaneseHolidays = {
+            '2024-01-01': '元日',
+            '2024-01-08': '成人の日',
+            '2024-02-11': '建国記念の日',
+            '2024-02-12': '振替休日',
+            '2024-02-23': '天皇誕生日',
+            '2024-03-20': '春分の日',
+            '2024-04-29': '昭和の日',
+            '2024-05-03': '憲法記念日',
+            '2024-05-04': 'みどりの日',
+            '2024-05-05': 'こどもの日',
+            '2024-05-06': '振替休日',
+            '2024-07-15': '海の日',
+            '2024-08-11': '山の日',
+            '2024-08-12': '振替休日',
+            '2024-09-16': '敬老の日',
+            '2024-09-22': '秋分の日',
+            '2024-09-23': '振替休日',
+            '2024-10-14': 'スポーツの日',
+            '2024-11-03': '文化の日',
+            '2024-11-04': '振替休日',
+            '2024-11-23': '勤労感謝の日',
+            
+            '2025-01-01': '元日',
+            '2025-01-13': '成人の日',
+            '2025-02-11': '建国記念の日',
+            '2025-02-23': '天皇誕生日',
+            '2025-02-24': '振替休日',
+            '2025-03-20': '春分の日',
+            '2025-04-29': '昭和の日',
+            '2025-05-03': '憲法記念日',
+            '2025-05-04': 'みどりの日',
+            '2025-05-05': 'こどもの日',
+            '2025-05-06': '振替休日',
+            '2025-07-21': '海の日',
+            '2025-08-11': '山の日',
+            '2025-09-15': '敬老の日',
+            '2025-09-23': '秋分の日',
+            '2025-10-13': 'スポーツの日',
+            '2025-11-03': '文化の日',
+            '2025-11-23': '勤労感謝の日',
+            '2025-11-24': '振替休日',
+            
+            '2026-01-01': '元日',
+            '2026-01-12': '成人の日',
+            '2026-02-11': '建国記念の日',
+            '2026-02-23': '天皇誕生日',
+            '2026-03-20': '春分の日',
+            '2026-04-29': '昭和の日',
+            '2026-05-03': '憲法記念日',
+            '2026-05-04': 'みどりの日',
+            '2026-05-05': 'こどもの日',
+            '2026-05-06': '振替休日',
+            '2026-07-20': '海の日',
+            '2026-08-11': '山の日',
+            '2026-09-21': '敬老の日',
+            '2026-09-22': '振替休日',
+            '2026-09-23': '秋分の日',
+            '2026-10-12': 'スポーツの日',
+            '2026-11-03': '文化の日',
+            '2026-11-23': '勤労感謝の日',
+            
+            '2027-01-01': '元日',
+            '2027-01-11': '成人の日',
+            '2027-02-11': '建国記念の日',
+            '2027-02-23': '天皇誕生日',
+            '2027-03-21': '春分の日',
+            '2027-03-22': '振替休日',
+            '2027-04-29': '昭和の日',
+            '2027-05-03': '憲法記念日',
+            '2027-05-04': 'みどりの日',
+            '2027-05-05': 'こどもの日',
+            '2027-07-19': '海の日',
+            '2027-08-11': '山の日',
+            '2027-09-20': '敬老の日',
+            '2027-09-23': '秋分の日',
+            '2027-10-11': 'スポーツの日',
+            '2027-11-03': '文化の日',
+            '2027-11-23': '勤労感謝の日',
+            
+            '2028-01-01': '元日',
+            '2028-01-10': '成人の日',
+            '2028-02-11': '建国記念の日',
+            '2028-02-23': '天皇誕生日',
+            '2028-03-20': '春分の日',
+            '2028-04-29': '昭和の日',
+            '2028-05-03': '憲法記念日',
+            '2028-05-04': 'みどりの日',
+            '2028-05-05': 'こどもの日',
+            '2028-07-17': '海の日',
+            '2028-08-11': '山の日',
+            '2028-09-18': '敬老の日',
+            '2028-09-22': '秋分の日',
+            '2028-10-09': 'スポーツの日',
+            '2028-11-03': '文化の日',
+            '2028-11-23': '勤労感謝の日',
+            
+            '2029-01-01': '元日',
+            '2029-01-08': '成人の日',
+            '2029-02-11': '建国記念の日',
+            '2029-02-12': '振替休日',
+            '2029-02-23': '天皇誕生日',
+            '2029-03-20': '春分の日',
+            '2029-04-29': '昭和の日',
+            '2029-04-30': '振替休日',
+            '2029-05-03': '憲法記念日',
+            '2029-05-04': 'みどりの日',
+            '2029-05-05': 'こどもの日',
+            '2029-07-16': '海の日',
+            '2029-08-11': '山の日',
+            '2029-09-17': '敬老の日',
+            '2029-09-23': '秋分の日',
+            '2029-09-24': '振替休日',
+            '2029-10-08': 'スポーツの日',
+            '2029-11-03': '文化の日',
+            '2029-11-23': '勤労感謝の日',
+            
+            '2030-01-01': '元日',
+            '2030-01-14': '成人の日',
+            '2030-02-11': '建国記念の日',
+            '2030-02-23': '天皇誕生日',
+            '2030-03-20': '春分の日',
+            '2030-04-29': '昭和の日',
+            '2030-05-03': '憲法記念日',
+            '2030-05-04': 'みどりの日',
+            '2030-05-05': 'こどもの日',
+            '2030-05-06': '振替休日',
+            '2030-07-15': '海の日',
+            '2030-08-11': '山の日',
+            '2030-08-12': '振替休日',
+            '2030-09-16': '敬老の日',
+            '2030-09-23': '秋分の日',
+            '2030-10-14': 'スポーツの日',
+            '2030-11-03': '文化の日',
+            '2030-11-04': '振替休日',
+            '2030-11-23': '勤労感謝の日'
+        };
 
         // Login form handler
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -1045,7 +1950,8 @@
                 profit: 0,
                 visitors: 0,
                 contracts: 0,
-                expenses: 0
+                expenses: 0,
+                deposits: 0
             };
             
             // Always create exactly 6 weeks for consistent layout
@@ -1059,7 +1965,8 @@
                     profit: 0,
                     visitors: 0,
                     contracts: 0,
-                    expenses: 0
+                    expenses: 0,
+                    deposits: 0
                 };
                 
                 for (let day = 0; day < 7; day++) {
@@ -1088,6 +1995,12 @@
                         if (day === 0) cell.className = 'sunday';
                         if (day === 6) cell.className = 'saturday';
                         
+                        // Check if it's a holiday
+                        const holidayName = japaneseHolidays[dateStr];
+                        if (holidayName) {
+                            cell.classList.add('holiday');
+                        }
+                        
                         // Check if today
                         const today = new Date();
                         if (year === today.getFullYear() && 
@@ -1100,12 +2013,22 @@
                         const contentDiv = document.createElement('div');
                         contentDiv.className = 'day-content';
                         
+                        // Add holiday name if it's a holiday
+                        if (holidayName) {
+                            const holidayDiv = document.createElement('div');
+                            holidayDiv.className = 'holiday-name';
+                            holidayDiv.textContent = holidayName;
+                            holidayDiv.title = holidayName; // Show full name on hover
+                            contentDiv.appendChild(holidayDiv);
+                        }
+                        
                         // Get all data
                         const purchaseData = getPurchaseData(dateStr);
                         const profitData = getProfitData(dateStr);
                         const salesData = getSalesData(dateStr);
                         const visitorsData = getVisitorsData(dateStr);
                         const contractsData = getContractsData(dateStr);
+                        const dayDepositData = getDayDepositTotal(dateStr);
                         
                         // Display metrics
                         if (purchaseData) {
@@ -1155,6 +2078,16 @@
                             contentDiv.appendChild(row);
                             weeklyTotals.expenses += expenseTotal;
                             monthlyTotals.expenses += expenseTotal;
+                        }
+
+                        // Display deposit total
+                        if (dayDepositData > 0) {
+                            const row = document.createElement('div');
+                            row.className = 'metric-row calendar-deposit';
+                            row.innerHTML = `<span class="metric-label">入金:</span><span>¥${dayDepositData.toLocaleString()}</span>`;
+                            contentDiv.appendChild(row);
+                            weeklyTotals.deposits += dayDepositData;
+                            monthlyTotals.deposits += dayDepositData;
                         }
                         
                         cell.appendChild(dayDiv);
@@ -1257,6 +2190,7 @@
                     <div>買取: ¥${monthlyTotals.purchase.toLocaleString()}</div>
                     <div>粗利益: ¥${monthlyTotals.profit.toLocaleString()}</div>
                     <div>売上: ¥${monthlyTotals.sales.toLocaleString()}</div>
+                    <div style="color: #059669; font-weight: bold;">入金: ¥${monthlyTotals.deposits.toLocaleString()}</div>
                     <div>経費: ¥${monthlyTotals.expenses.toLocaleString()}</div>
                     <div style="border-top: 1px solid #3b82f6; margin-top: 5px; padding-top: 5px; font-weight: bold; color: ${monthlyOperatingProfit >= 0 ? '#059669' : '#dc2626'};">
                         営業利益: ¥${monthlyOperatingProfit.toLocaleString()}
@@ -1589,6 +2523,16 @@
             if (savedWeeklyData) {
                 weeklyData = JSON.parse(savedWeeklyData);
             }
+            const savedDepositData = localStorage.getItem('depositData');
+            if (savedDepositData) {
+                depositData = JSON.parse(savedDepositData);
+                updateDepositTable();
+            }
+            const savedWithdrawData = localStorage.getItem('withdrawData');
+            if (savedWithdrawData) {
+                withdrawData = JSON.parse(savedWithdrawData);
+                updateWithdrawTable();
+            }
         }
         
         function getWeekData(weekId) {
@@ -1778,11 +2722,470 @@
             }
         }
 
+        // Deposit management functions
+        function addDeposit() {
+            const date = document.getElementById('depositDate').value;
+            const amount = document.getElementById('depositAmount').value;
+            const note = document.getElementById('depositNote').value;
+            
+            if (!date || !amount) {
+                alert('入金日と入金額は必須項目です');
+                return;
+            }
+            
+            const deposit = {
+                id: Date.now(),
+                date: date,
+                amount: parseInt(amount),
+                note: note || '',
+                createdAt: new Date().toISOString()
+            };
+            
+            depositData.push(deposit);
+            saveDepositData();
+            updateDepositTable();
+            updateSummary();
+            updateCalendar(); // カレンダーも更新
+            
+            // Clear form
+            document.getElementById('depositDate').value = '';
+            document.getElementById('depositAmount').value = '';
+            document.getElementById('depositNote').value = '';
+            
+            showMessage('入金データを登録しました', 'success');
+        }
+        
+        function saveDepositData() {
+            localStorage.setItem('depositData', JSON.stringify(depositData));
+        }
+        
+        function updateDepositTable() {
+            const tbody = document.getElementById('depositTableBody');
+            const noDataMsg = document.getElementById('noDepositData');
+            
+            if (!tbody) return; // Exit if element doesn't exist
+            
+            // Get selected year and month
+            const yearEl = document.getElementById('cashflowYear');
+            const monthEl = document.getElementById('cashflowMonth');
+            
+            if (!yearEl || !monthEl) {
+                // If month selector doesn't exist, show all data
+                displayAllDeposits();
+                return;
+            }
+            
+            const selectedYear = parseInt(yearEl.value);
+            const selectedMonth = parseInt(monthEl.value);
+            
+            // Filter deposits by selected month
+            const filteredDeposits = depositData.filter(deposit => {
+                const date = new Date(deposit.date);
+                return date.getFullYear() === selectedYear && date.getMonth() + 1 === selectedMonth;
+            });
+            
+            if (filteredDeposits.length === 0) {
+                tbody.innerHTML = '';
+                if (noDataMsg) noDataMsg.style.display = 'block';
+                updateDepositTotal(filteredDeposits);
+                updateSummary();
+                return;
+            }
+            
+            if (noDataMsg) noDataMsg.style.display = 'none';
+            
+            // Sort by date (newest first)
+            const sortedDeposits = [...filteredDeposits].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            tbody.innerHTML = sortedDeposits.map(deposit => `
+                <tr>
+                    <td>${formatDate(deposit.date)}</td>
+                    <td>¥${deposit.amount.toLocaleString()}</td>
+                    <td>${deposit.note}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editDeposit(${deposit.id})">編集</button>
+                        <button class="btn-delete" onclick="deleteDeposit(${deposit.id})">削除</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            updateDepositTotal(filteredDeposits);
+            updateSummary();
+        }
+        
+        function displayAllDeposits() {
+            const tbody = document.getElementById('depositTableBody');
+            const noDataMsg = document.getElementById('noDepositData');
+            
+            if (depositData.length === 0) {
+                tbody.innerHTML = '';
+                if (noDataMsg) noDataMsg.style.display = 'block';
+                updateDepositTotal([]);
+                return;
+            }
+            
+            if (noDataMsg) noDataMsg.style.display = 'none';
+            
+            // Sort by date (newest first)
+            const sortedDeposits = [...depositData].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            tbody.innerHTML = sortedDeposits.map(deposit => `
+                <tr>
+                    <td>${formatDate(deposit.date)}</td>
+                    <td>¥${deposit.amount.toLocaleString()}</td>
+                    <td>${deposit.note}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editDeposit(${deposit.id})">編集</button>
+                        <button class="btn-delete" onclick="deleteDeposit(${deposit.id})">削除</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            updateDepositTotal(depositData);
+        }
+        
+        function updateDepositTotal(deposits = null) {
+            const dataToSum = deposits || depositData;
+            const total = dataToSum.reduce((sum, deposit) => sum + deposit.amount, 0);
+            const totalEl = document.getElementById('totalDeposit');
+            if (totalEl) {
+                totalEl.textContent = `¥${total.toLocaleString()}`;
+            }
+        }
+        
+        function updateDepositDisplay() {
+            const yearEl = document.getElementById('cashflowYear');
+            const monthEl = document.getElementById('cashflowMonth');
+            
+            if (yearEl && monthEl) {
+                const year = yearEl.value;
+                const month = monthEl.value;
+                
+                // Update deposit titles
+                const depositTitleEl = document.getElementById('depositMonthTitle');
+                if (depositTitleEl) {
+                    depositTitleEl.textContent = `${year}年${month}月の入金履歴`;
+                }
+                
+                const depositLabelEl = document.getElementById('depositMonthLabel');
+                if (depositLabelEl) {
+                    depositLabelEl.textContent = `${year}年${month}月 `;
+                }
+                
+                // Update withdraw titles
+                const withdrawTitleEl = document.getElementById('withdrawMonthTitle');
+                if (withdrawTitleEl) {
+                    withdrawTitleEl.textContent = `${year}年${month}月の出金履歴`;
+                }
+                
+                const withdrawLabelEl = document.getElementById('withdrawMonthLabel');
+                if (withdrawLabelEl) {
+                    withdrawLabelEl.textContent = `${year}年${month}月 `;
+                }
+            }
+            
+            updateDepositTable();
+            updateWithdrawTable();
+        }
+        
+        function changeDepositMonth(direction) {
+            const yearEl = document.getElementById('cashflowYear');
+            const monthEl = document.getElementById('cashflowMonth');
+            
+            if (!yearEl || !monthEl) return;
+            
+            let year = parseInt(yearEl.value);
+            let month = parseInt(monthEl.value);
+            
+            month += direction;
+            
+            if (month > 12) {
+                month = 1;
+                year++;
+            } else if (month < 1) {
+                month = 12;
+                year--;
+            }
+            
+            yearEl.value = year;
+            monthEl.value = month;
+            updateDepositDisplay();
+        }
+        
+        function deleteDeposit(id) {
+            if (confirm('この入金データを削除しますか？')) {
+                depositData = depositData.filter(d => d.id !== id);
+                saveDepositData();
+                updateDepositTable();
+                updateSummary();
+                updateCalendar(); // カレンダーも更新
+                showMessage('入金データを削除しました', 'success');
+            }
+        }
+        
+        function editDeposit(id) {
+            const deposit = depositData.find(d => d.id === id);
+            if (!deposit) return;
+            
+            const newDate = prompt('入金日を入力してください (YYYY-MM-DD):', deposit.date);
+            if (!newDate) return;
+            
+            const newAmount = prompt('入金額を入力してください:', deposit.amount);
+            if (!newAmount) return;
+            
+            const newNote = prompt('備考を入力してください:', deposit.note);
+            
+            deposit.date = newDate;
+            deposit.amount = parseInt(newAmount);
+            deposit.note = newNote || '';
+            
+            saveDepositData();
+            updateDepositTable();
+            updateSummary();
+            updateCalendar(); // カレンダーも更新
+            showMessage('入金データを更新しました', 'success');
+        }
+        
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${year}/${month}/${day}`;
+        }
+
+        function getDayDepositTotal(dateStr) {
+            const dayDeposits = depositData.filter(deposit => deposit.date === dateStr);
+            return dayDeposits.reduce((sum, deposit) => sum + deposit.amount, 0);
+        }
+        
+        // Withdraw management functions
+        function addWithdraw() {
+            const date = document.getElementById('withdrawDate').value;
+            const amount = document.getElementById('withdrawAmount').value;
+            const note = document.getElementById('withdrawNote').value;
+            
+            if (!date || !amount) {
+                alert('出金日と出金額は必須項目です');
+                return;
+            }
+            
+            const withdraw = {
+                id: Date.now(),
+                date: date,
+                amount: parseInt(amount),
+                note: note || '',
+                createdAt: new Date().toISOString()
+            };
+            
+            withdrawData.push(withdraw);
+            saveWithdrawData();
+            updateWithdrawTable();
+            updateSummary();
+            
+            // Clear form
+            document.getElementById('withdrawDate').value = '';
+            document.getElementById('withdrawAmount').value = '';
+            document.getElementById('withdrawNote').value = '';
+            
+            showMessage('出金データを登録しました', 'success');
+        }
+        
+        function saveWithdrawData() {
+            localStorage.setItem('withdrawData', JSON.stringify(withdrawData));
+        }
+        
+        function updateWithdrawTable() {
+            const tbody = document.getElementById('withdrawTableBody');
+            const noDataMsg = document.getElementById('noWithdrawData');
+            
+            if (!tbody) return;
+            
+            const yearEl = document.getElementById('cashflowYear');
+            const monthEl = document.getElementById('cashflowMonth');
+            
+            if (!yearEl || !monthEl) {
+                displayAllWithdraws();
+                return;
+            }
+            
+            const selectedYear = parseInt(yearEl.value);
+            const selectedMonth = parseInt(monthEl.value);
+            
+            const filteredWithdraws = withdrawData.filter(withdraw => {
+                const date = new Date(withdraw.date);
+                return date.getFullYear() === selectedYear && date.getMonth() + 1 === selectedMonth;
+            });
+            
+            if (filteredWithdraws.length === 0) {
+                tbody.innerHTML = '';
+                if (noDataMsg) noDataMsg.style.display = 'block';
+                updateWithdrawTotal(filteredWithdraws);
+                updateSummary();
+                return;
+            }
+            
+            if (noDataMsg) noDataMsg.style.display = 'none';
+            
+            const sortedWithdraws = [...filteredWithdraws].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            tbody.innerHTML = sortedWithdraws.map(withdraw => `
+                <tr>
+                    <td>${formatDate(withdraw.date)}</td>
+                    <td class="withdraw-amount">-¥${withdraw.amount.toLocaleString()}</td>
+                    <td>${withdraw.note}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editWithdraw(${withdraw.id})">編集</button>
+                        <button class="btn-delete" onclick="deleteWithdraw(${withdraw.id})">削除</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            updateWithdrawTotal(filteredWithdraws);
+            updateSummary();
+        }
+        
+        function displayAllWithdraws() {
+            const tbody = document.getElementById('withdrawTableBody');
+            const noDataMsg = document.getElementById('noWithdrawData');
+            
+            if (withdrawData.length === 0) {
+                tbody.innerHTML = '';
+                if (noDataMsg) noDataMsg.style.display = 'block';
+                updateWithdrawTotal([]);
+                return;
+            }
+            
+            if (noDataMsg) noDataMsg.style.display = 'none';
+            
+            const sortedWithdraws = [...withdrawData].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            tbody.innerHTML = sortedWithdraws.map(withdraw => `
+                <tr>
+                    <td>${formatDate(withdraw.date)}</td>
+                    <td class="withdraw-amount">-¥${withdraw.amount.toLocaleString()}</td>
+                    <td>${withdraw.note}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editWithdraw(${withdraw.id})">編集</button>
+                        <button class="btn-delete" onclick="deleteWithdraw(${withdraw.id})">削除</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            updateWithdrawTotal(withdrawData);
+        }
+        
+        function updateWithdrawTotal(withdraws = null) {
+            const dataToSum = withdraws || withdrawData;
+            const total = dataToSum.reduce((sum, withdraw) => sum + withdraw.amount, 0);
+            const totalEl = document.getElementById('totalWithdraw');
+            if (totalEl) {
+                totalEl.textContent = `-¥${total.toLocaleString()}`;
+            }
+        }
+        
+        function deleteWithdraw(id) {
+            if (confirm('この出金データを削除しますか？')) {
+                withdrawData = withdrawData.filter(w => w.id !== id);
+                saveWithdrawData();
+                updateWithdrawTable();
+                showMessage('出金データを削除しました', 'success');
+            }
+        }
+        
+        function editWithdraw(id) {
+            const withdraw = withdrawData.find(w => w.id === id);
+            if (!withdraw) return;
+            
+            const newDate = prompt('出金日を入力してください (YYYY-MM-DD):', withdraw.date);
+            if (!newDate) return;
+            
+            const newAmount = prompt('出金額を入力してください:', withdraw.amount);
+            if (!newAmount) return;
+            
+            const newNote = prompt('備考を入力してください:', withdraw.note);
+            
+            withdraw.date = newDate;
+            withdraw.amount = parseInt(newAmount);
+            withdraw.note = newNote || '';
+            
+            saveWithdrawData();
+            updateWithdrawTable();
+            showMessage('出金データを更新しました', 'success');
+        }
+        
+        function updateSummary() {
+            const yearEl = document.getElementById('cashflowYear');
+            const monthEl = document.getElementById('cashflowMonth');
+            
+            let depositTotal = 0;
+            let withdrawTotal = 0;
+            
+            if (yearEl && monthEl) {
+                const selectedYear = parseInt(yearEl.value);
+                const selectedMonth = parseInt(monthEl.value);
+                
+                const filteredDeposits = depositData.filter(deposit => {
+                    const date = new Date(deposit.date);
+                    return date.getFullYear() === selectedYear && date.getMonth() + 1 === selectedMonth;
+                });
+                
+                const filteredWithdraws = withdrawData.filter(withdraw => {
+                    const date = new Date(withdraw.date);
+                    return date.getFullYear() === selectedYear && date.getMonth() + 1 === selectedMonth;
+                });
+                
+                depositTotal = filteredDeposits.reduce((sum, d) => sum + d.amount, 0);
+                withdrawTotal = filteredWithdraws.reduce((sum, w) => sum + w.amount, 0);
+            } else {
+                depositTotal = depositData.reduce((sum, d) => sum + d.amount, 0);
+                withdrawTotal = withdrawData.reduce((sum, w) => sum + w.amount, 0);
+            }
+            
+            const balance = depositTotal - withdrawTotal;
+            
+            const summaryDepositEl = document.getElementById('summaryDeposit');
+            const summaryWithdrawEl = document.getElementById('summaryWithdraw');
+            const summaryBalanceEl = document.getElementById('summaryBalance');
+            
+            if (summaryDepositEl) summaryDepositEl.textContent = `¥${depositTotal.toLocaleString()}`;
+            if (summaryWithdrawEl) summaryWithdrawEl.textContent = `-¥${withdrawTotal.toLocaleString()}`;
+            if (summaryBalanceEl) {
+                summaryBalanceEl.textContent = `¥${balance.toLocaleString()}`;
+                summaryBalanceEl.style.color = balance >= 0 ? '#059669' : '#dc2626';
+            }
+        }
+        
         // Initialize with current date
         window.onload = function() {
             const today = new Date();
             document.getElementById('year').value = today.getFullYear();
             document.getElementById('month').value = today.getMonth() + 1;
+            
+            // Set cashflow year and month
+            const cashflowYear = document.getElementById('cashflowYear');
+            const cashflowMonth = document.getElementById('cashflowMonth');
+            if (cashflowYear) {
+                cashflowYear.value = today.getFullYear();
+            }
+            if (cashflowMonth) {
+                cashflowMonth.value = today.getMonth() + 1;
+            }
+            
+            // Set today's date as default for deposit and withdraw forms
+            const depositDateInput = document.getElementById('depositDate');
+            const withdrawDateInput = document.getElementById('withdrawDate');
+            const todayStr = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+            
+            if (depositDateInput) {
+                depositDateInput.value = todayStr;
+            }
+            if (withdrawDateInput) {
+                withdrawDateInput.value = todayStr;
+            }
+            
+            // Initialize deposit display
+            updateDepositDisplay();
         };
     </script>
 </body>
