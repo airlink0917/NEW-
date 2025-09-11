@@ -1769,6 +1769,24 @@
                                 出金登録
                             </button>
                         </div>
+                        <!-- 収支内訳 -->
+                        <div class="cashflow-section summary-section">
+                            <h2 class="section-title">収支内訳</h2>
+                            <div class="summary-grid">
+                                <div class="summary-item">
+                                    <span class="summary-label">入金合計:</span>
+                                    <span class="summary-value deposit-amount" id="summaryDeposit">¥0</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">出金合計:</span>
+                                    <span class="summary-value withdraw-amount" id="summaryWithdraw">-¥0</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">収支:</span>
+                                    <span class="summary-value" id="summaryBalance">¥0</span>
+                                </div>
+                            </div>
+                        </div>
 
                         <div class="cashflow-split-container">
                             <!-- 左側：入金 -->
@@ -1840,24 +1858,6 @@
                             </div>
                         </div>
 
-                        <!-- 収支サマリー -->
-                        <div class="cashflow-section summary-section">
-                            <h2 class="section-title">収支サマリー</h2>
-                            <div class="summary-grid">
-                                <div class="summary-item">
-                                    <span class="summary-label">入金合計:</span>
-                                    <span class="summary-value deposit-amount" id="summaryDeposit">¥0</span>
-                                </div>
-                                <div class="summary-item">
-                                    <span class="summary-label">出金合計:</span>
-                                    <span class="summary-value withdraw-amount" id="summaryWithdraw">-¥0</span>
-                                </div>
-                                <div class="summary-item">
-                                    <span class="summary-label">収支:</span>
-                                    <span class="summary-value" id="summaryBalance">¥0</span>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
