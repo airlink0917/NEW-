@@ -964,24 +964,25 @@
 
             .weekly-total {
                 display: table-cell !important;
-                font-size: 7px;
-                padding: 2px;
-                min-width: 45px;
+                font-size: 8px;
+                padding: 3px;
+                min-width: 80px;
+                width: 15%;
             }
             
             .weekly-total select {
-                font-size: 7px !important;
-                padding: 1px !important;
+                font-size: 8px !important;
+                padding: 2px !important;
             }
             
             .weekly-total input {
-                font-size: 7px !important;
-                padding: 1px !important;
+                font-size: 8px !important;
+                padding: 2px !important;
             }
             
             .weekly-total div {
-                font-size: 7px !important;
-                line-height: 1.2;
+                font-size: 8px !important;
+                line-height: 1.3;
             }
 
             .monthly-total {
@@ -1431,8 +1432,8 @@
             background: #fce7f3;
             font-weight: bold;
             border: 2px solid #ec4899;
-            width: 14.28%;
-            min-width: 120px;
+            width: 20%;
+            min-width: 150px;
         }
 
         .monthly-total {
@@ -2540,32 +2541,7 @@
                 operatingProfitEl.style.color = monthlyOperatingProfitForStats >= 0 ? '#059669' : '#dc2626';
             }
             
-            // Add monthly total row
-            const monthTotalRow = tbody.insertRow();
-            const monthLabelCell = monthTotalRow.insertCell();
-            monthLabelCell.colSpan = 7;
-            monthLabelCell.className = 'monthly-total';
-            monthLabelCell.style.textAlign = 'center';
-            monthLabelCell.innerHTML = '<strong>月間合計</strong>';
-            
-            const monthTotalCell = monthTotalRow.insertCell();
-            monthTotalCell.className = 'monthly-total';
-            const monthlyOperatingProfit = monthlyTotals.profit - monthlyTotals.expenses;
-            monthTotalCell.innerHTML = `
-                <div style="padding: 8px;">
-                    <div>買取: ¥${monthlyTotals.purchase.toLocaleString()}</div>
-                    <div>粗利益: ¥${monthlyTotals.profit.toLocaleString()}</div>
-                    <div>売上: ¥${monthlyTotals.sales.toLocaleString()}</div>
-                    <div style="color: #059669; font-weight: bold;">入金: ¥${monthlyTotals.deposits.toLocaleString()}</div>
-                    <div>経費: ¥${monthlyTotals.expenses.toLocaleString()}</div>
-                    <div style="border-top: 1px solid #3b82f6; margin-top: 5px; padding-top: 5px; font-weight: bold; color: ${monthlyOperatingProfit >= 0 ? '#059669' : '#dc2626'};">
-                        営業利益: ¥${monthlyOperatingProfit.toLocaleString()}
-                    </div>
-                    <div>来店: ${monthlyTotals.visitors}人</div>
-                    <div>成約: ${monthlyTotals.contracts}件</div>
-                    <div>成約率: ${monthlyTotals.visitors > 0 ? Math.round((monthlyTotals.contracts / monthlyTotals.visitors) * 100) : 0}%</div>
-                </div>
-            `;
+            // Monthly total row removed as requested
             
             updateStats();
         }
