@@ -255,7 +255,7 @@
 
         .logout-btn {
             padding: 8px 20px;
-            background: #ef4444;
+            background: #6b7280;
             color: white;
             border: none;
             border-radius: 5px;
@@ -264,7 +264,7 @@
         }
 
         .logout-btn:hover {
-            background: #dc2626;
+            background: #4b5563;
         }
 
         .calendar-controls {
@@ -2471,14 +2471,14 @@
                             </select>
                             <input type="text" class="week-store" data-week="${weekId}" placeholder="店舗名" value="${weekData.store || ''}" 
                                    style="width: 100%; font-size: 9px; padding: 2px; margin-bottom: 3px; border: 1px solid #ec4899;">
-                            ${weeklyTotals.sales > 0 || weeklyTotals.purchase > 0 ? `
+                            ${(weeklyTotals.sales > 0 || weeklyTotals.purchase > 0 || weeklyTotals.profit > 0 || weeklyTotals.expenses > 0) ? `
                                 <div style="border-top: 1px solid #ec4899; padding-top: 3px; margin-top: 3px;">
-                                    <div>買: ¥${weeklyTotals.purchase.toLocaleString()}</div>
-                                    <div>利: ¥${weeklyTotals.profit.toLocaleString()}</div>
-                                    <div>売: ¥${weeklyTotals.sales.toLocaleString()}</div>
-                                    <div>経: ¥${weeklyTotals.expenses.toLocaleString()}</div>
-                                    <div style="border-top: 1px solid #ec4899; margin-top: 3px; padding-top: 3px; font-weight: bold; color: ${operatingProfit >= 0 ? '#059669' : '#dc2626'};">営業利益: ¥${operatingProfit.toLocaleString()}</div>
-                                    <div>来/約: ${weeklyTotals.visitors}/${weeklyTotals.contracts}</div>
+                                    ${weeklyTotals.purchase > 0 ? `<div>買: ¥${weeklyTotals.purchase.toLocaleString()}</div>` : ''}
+                                    ${weeklyTotals.profit > 0 ? `<div>利: ¥${weeklyTotals.profit.toLocaleString()}</div>` : ''}
+                                    ${weeklyTotals.sales > 0 ? `<div>売: ¥${weeklyTotals.sales.toLocaleString()}</div>` : ''}
+                                    ${weeklyTotals.expenses > 0 ? `<div>経: ¥${weeklyTotals.expenses.toLocaleString()}</div>` : ''}
+                                    ${(weeklyTotals.profit > 0 || weeklyTotals.expenses > 0) ? `<div style="border-top: 1px solid #ec4899; margin-top: 3px; padding-top: 3px; font-weight: bold; color: ${operatingProfit >= 0 ? '#059669' : '#dc2626'};">営業利益: ¥${operatingProfit.toLocaleString()}</div>` : ''}
+                                    ${(weeklyTotals.visitors > 0 || weeklyTotals.contracts > 0) ? `<div>来/約: ${weeklyTotals.visitors}/${weeklyTotals.contracts}</div>` : ''}
                                 </div>
                             ` : '<div style="margin-top: 5px;">-</div>'}
                         </div>
@@ -2507,6 +2507,19 @@
                 
                 // Always show all 6 weeks for consistency
                 // Don't hide any rows
+            }
+            
+            // Update monthly stats cards
+            document.getElementById('monthTotal').textContent = `¥${monthlyTotals.sales.toLocaleString()}`;
+            document.getElementById('purchaseTotal').textContent = `¥${monthlyTotals.purchase.toLocaleString()}`;
+            document.getElementById('profitTotal').textContent = `¥${monthlyTotals.profit.toLocaleString()}`;
+            document.getElementById('expenseTotal').textContent = `¥${monthlyTotals.expenses.toLocaleString()}`;
+            
+            const monthlyOperatingProfitForStats = monthlyTotals.profit - monthlyTotals.expenses;
+            const operatingProfitEl = document.getElementById('operatingProfitTotal');
+            if (operatingProfitEl) {
+                operatingProfitEl.textContent = `¥${monthlyOperatingProfitForStats.toLocaleString()}`;
+                operatingProfitEl.style.color = monthlyOperatingProfitForStats >= 0 ? '#059669' : '#dc2626';
             }
             
             // Add monthly total row
