@@ -96,7 +96,16 @@
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            transition: width 0.3s;
+            transition: transform 0.3s ease;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            z-index: 1000;
+        }
+        
+        .sidebar.mobile-closed {
+            transform: translateX(-100%);
         }
 
         .sidebar.collapsed {
@@ -681,32 +690,79 @@
             background: #d97706;
         }
 
+        /* Mobile menu toggle button */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1001;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 45px;
+            height: 45px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        .mobile-overlay.active {
+            display: block;
+        }
+        
         /* Mobile Responsive Styles */
         @media screen and (max-width: 768px) {
             .sidebar {
-                width: 60px;
+                width: 280px;
+                transform: translateX(-100%);
             }
             
-            .sidebar-title {
-                display: none;
+            .sidebar.mobile-open {
+                transform: translateX(0);
             }
             
-            .menu-item span {
-                display: none;
+            .mobile-menu-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .dashboard-container {
+                margin-left: 0;
             }
             
             .menu-item {
-                padding: 12px;
-                justify-content: center;
+                padding: 16px 20px;
+                font-size: 16px;
+            }
+            
+            .menu-item span {
+                display: inline;
             }
             
             .main-content {
                 margin: 10px;
                 padding: 15px;
+                padding-top: 70px;
+                width: 100%;
             }
 
             .dashboard h1 {
-                font-size: 18px;
+                font-size: 20px;
+                margin-left: 50px;
             }
             
             .dashboard-header {
@@ -714,6 +770,13 @@
                 justify-content: space-between;
                 align-items: center;
                 padding-bottom: 15px;
+                position: sticky;
+                top: 0;
+                background: white;
+                z-index: 100;
+                margin: -15px -15px 15px;
+                padding: 15px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             }
             
             .logout-btn {
@@ -723,7 +786,8 @@
 
             .calendar-controls {
                 flex-direction: column;
-                gap: 10px;
+                gap: 15px;
+                margin-bottom: 20px;
             }
 
             .control-group {
@@ -732,7 +796,16 @@
 
             .nav-buttons {
                 width: 100%;
-                justify-content: space-between;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            
+            .nav-btn {
+                width: 100%;
+                padding: 12px;
+                font-size: 16px;
+                border-radius: 8px;
             }
 
             .calendar-container {
@@ -750,21 +823,24 @@
             }
 
             .calendar td {
-                height: 80px;
-                min-height: 80px;
-                max-height: 80px;
-                padding: 3px;
-                font-size: 9px;
+                height: 100px;
+                min-height: 100px;
+                max-height: 100px;
+                padding: 5px;
+                font-size: 11px;
+                vertical-align: top;
             }
 
             .day-number {
-                font-size: 12px;
-                margin-bottom: 2px;
+                font-size: 14px;
+                margin-bottom: 4px;
+                font-weight: bold;
             }
 
             .day-content {
-                font-size: 8px;
-                max-height: 55px;
+                font-size: 10px;
+                max-height: 70px;
+                line-height: 1.3;
             }
 
             .metric-row {
@@ -803,9 +879,14 @@
 
             .modal-content {
                 width: 95%;
-                margin: 2% auto;
-                padding: 15px;
-                max-height: 95vh;
+                margin: 10px auto;
+                padding: 20px;
+                max-height: 90vh;
+                border-radius: 15px;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
             }
 
             .modal-header h2 {
@@ -836,18 +917,28 @@
 
         @media screen and (max-width: 480px) {
             .dashboard-header {
-                flex-direction: row;
+                flex-direction: column;
                 gap: 10px;
+                align-items: stretch;
             }
             
             .dashboard h1 {
-                font-size: 16px;
+                font-size: 18px;
+                margin-left: 50px;
+                margin-bottom: 10px;
+            }
+            
+            .logout-btn {
+                width: 100%;
+                padding: 12px;
+                font-size: 14px;
             }
 
             .calendar td {
-                height: 60px;
-                min-height: 60px;
-                max-height: 60px;
+                height: 85px;
+                min-height: 85px;
+                max-height: 85px;
+                padding: 4px;
             }
 
             .day-content {
@@ -856,6 +947,15 @@
 
             .stats-container {
                 grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .stat-card {
+                padding: 15px;
+            }
+            
+            .stat-value {
+                font-size: 20px;
             }
 
             /* Show simplified calendar on very small screens */
@@ -868,6 +968,68 @@
             }
         }
 
+        /* Additional mobile improvements */
+        @media screen and (max-width: 768px) {
+            .form-group {
+                margin-bottom: 15px;
+            }
+            
+            .form-group label {
+                font-size: 14px;
+                margin-bottom: 8px;
+                font-weight: 600;
+            }
+            
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                width: 100%;
+                padding: 14px;
+                font-size: 16px;
+                border-radius: 8px;
+                border: 2px solid #e5e7eb;
+            }
+            
+            .form-group input:focus,
+            .form-group select:focus,
+            .form-group textarea:focus {
+                border-color: #667eea;
+                outline: none;
+            }
+            
+            .expense-inputs {
+                gap: 15px;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .modal-footer {
+                padding: 15px 0;
+                gap: 10px;
+            }
+            
+            .modal-btn {
+                width: 100%;
+                padding: 14px;
+                font-size: 16px;
+                border-radius: 8px;
+                font-weight: 600;
+            }
+            
+            select {
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23667eea'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 12px center;
+                background-size: 20px;
+                padding-right: 40px;
+                appearance: none;
+                -webkit-appearance: none;
+            }
+        }
+        
         /* Touch-friendly buttons for mobile */
         @media (hover: none) and (pointer: coarse) {
             .nav-btn,
@@ -1325,11 +1487,13 @@
     </div>
 
     <div class="dashboard" id="dashboard">
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" onclick="toggleMobileMenu()">☰</button>
+        <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
         <div class="dashboard-container">
-            <div class="sidebar" id="sidebar">
+            <div class="sidebar mobile-closed" id="sidebar">
                 <div class="sidebar-header">
                     <span class="sidebar-title">メニュー</span>
-                    <button class="toggle-sidebar" onclick="toggleSidebar()">☰</button>
+                    <button class="toggle-sidebar" onclick="toggleSidebar()" style="display: none;">☰</button>
                 </div>
                 <div class="sidebar-menu">
                     <button class="menu-item active" onclick="showSection('calendar')">
@@ -1713,14 +1877,42 @@
         let depositData = [];
         let withdrawData = [];
 
-        // Function to toggle sidebar
+        // Function to toggle sidebar (desktop)
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('collapsed');
         }
         
+        // Mobile menu functions
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            
+            if (sidebar.classList.contains('mobile-open')) {
+                closeMobileMenu();
+            } else {
+                sidebar.classList.remove('mobile-closed');
+                sidebar.classList.add('mobile-open');
+                overlay.classList.add('active');
+            }
+        }
+        
+        function closeMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            
+            sidebar.classList.remove('mobile-open');
+            sidebar.classList.add('mobile-closed');
+            overlay.classList.remove('active');
+        }
+        
         // Function to show different sections
         function showSection(section) {
+            // Close mobile menu if open
+            if (window.innerWidth <= 768) {
+                closeMobileMenu();
+            }
+            
             // Remove active class from all menu items
             document.querySelectorAll('.menu-item').forEach(item => {
                 item.classList.remove('active');
