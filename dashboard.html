@@ -9,6 +9,9 @@
     <meta name="format-detection" content="telephone=no">
     <meta name="theme-color" content="#667eea">
     <title>売上管理システム</title>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-sync.js"></script>
     <style>
         * {
             margin: 0;
@@ -1797,7 +1800,10 @@
             </div>
         </div>
 
-                    <button class="nav-btn" onclick="saveAllData()" style="margin-top: 20px; background: #6b7280;">手動バックアップ</button>
+                    <button class="nav-btn" id="backupBtn" style="margin-top: 20px; background: #6b7280;">手動バックアップ</button>
+                    <button class="nav-btn" id="downloadBtn" style="margin-top: 10px; background: #3b82f6;">データをダウンロード</button>
+                    <button class="nav-btn" id="uploadBtn" style="margin-top: 10px; background: #8b5cf6;">データをアップロード</button>
+                    <input type="file" id="fileInput" accept=".json" style="display: none;">
                     <div style="font-size: 12px; color: #10b981; margin-top: 5px; text-align: center;">※ データは自動保存されています</div>
                     <div class="message" id="message"></div>
                 </div>
@@ -2915,9 +2921,97 @@
         }
 
         function saveAllData() {
-            localStorage.setItem('calendarData', JSON.stringify(calendarData));
-            localStorage.setItem('weeklyData', JSON.stringify(weeklyData));
-            showMessage('データをバックアップしました！', 'success');
+            try {
+                const timestamp = new Date().toISOString();
+                
+                localStorage.setItem('calendarData', JSON.stringify(calendarData));
+                localStorage.setItem('calendarDataUpdated', timestamp);
+                
+                localStorage.setItem('weeklyData', JSON.stringify(weeklyData));
+                localStorage.setItem('weeklyDataUpdated', timestamp);
+                
+                localStorage.setItem('depositData', JSON.stringify(depositData));
+                localStorage.setItem('depositDataUpdated', timestamp);
+                
+                localStorage.setItem('withdrawData', JSON.stringify(withdrawData));
+                localStorage.setItem('withdrawDataUpdated', timestamp);
+                
+                // Supabaseに同期（設定されている場合）
+                if (typeof saveToSupabase === 'function' && supabase) {
+                    saveToSupabase('calendar', calendarData);
+                    saveToSupabase('weekly', weeklyData);
+                    saveToSupabase('deposit', depositData);
+                    saveToSupabase('withdraw', withdrawData);
+                }
+                
+                showMessage('データをバックアップしました！', 'success');
+                showAutoSaveIndicator();
+            } catch (error) {
+                console.error('Save error:', error);
+                showMessage('バックアップに失敗しました', 'error');
+            }
+        }
+        
+        // ダウンロード機能
+        function downloadData() {
+            const data = {
+                calendarData: calendarData,
+                weeklyData: weeklyData,
+                depositData: depositData,
+                withdrawData: withdrawData,
+                exportDate: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sales-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showMessage('データをダウンロードしました', 'success');
+        }
+        
+        // アップロード機能
+        function uploadData(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.calendarData) {
+                        calendarData = data.calendarData;
+                        localStorage.setItem('calendarData', JSON.stringify(calendarData));
+                    }
+                    if (data.weeklyData) {
+                        weeklyData = data.weeklyData;
+                        localStorage.setItem('weeklyData', JSON.stringify(weeklyData));
+                    }
+                    if (data.depositData) {
+                        depositData = data.depositData;
+                        localStorage.setItem('depositData', JSON.stringify(depositData));
+                    }
+                    if (data.withdrawData) {
+                        withdrawData = data.withdrawData;
+                        localStorage.setItem('withdrawData', JSON.stringify(withdrawData));
+                    }
+                    
+                    // 画面を更新
+                    updateCalendar();
+                    updateDepositTable();
+                    updateWithdrawTable();
+                    updateStats();
+                    
+                    showMessage('データを読み込みました', 'success');
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showMessage('ファイルの読み込みに失敗しました', 'error');
+                }
+            };
+            reader.readAsText(file);
         }
 
         function loadData() {
@@ -3663,6 +3757,43 @@
             }
             if (cashflowMonth) {
                 cashflowMonth.value = today.getMonth() + 1;
+            }
+            
+            // ボタンのイベントリスナーを設定
+            document.getElementById('backupBtn').addEventListener('click', saveAllData);
+            document.getElementById('downloadBtn').addEventListener('click', downloadData);
+            document.getElementById('uploadBtn').addEventListener('click', function() {
+                document.getElementById('fileInput').click();
+            });
+            document.getElementById('fileInput').addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    uploadData(e.target.files[0]);
+                }
+            });
+            
+            // 定期的な自動保存
+            setInterval(function() {
+                saveAllData();
+            }, 60000); // 1分ごとに自動保存
+            
+            // Supabase同期の初期化（設定されている場合）
+            if (typeof initSupabase === 'function' && initSupabase()) {
+                console.log('Supabase sync initialized');
+                syncAllData().then(needsUpdate => {
+                    if (needsUpdate) {
+                        loadData();
+                        updateCalendar();
+                        updateStats();
+                        updateDepositTable();
+                        updateWithdrawTable();
+                    }
+                });
+                setupRealtimeSync();
+                
+                // 定期的な同期
+                setInterval(() => {
+                    syncAllData();
+                }, 30000); // 30秒ごとに同期
             }
             
             // Set today's date as default for deposit and withdraw forms
