@@ -9,12 +9,9 @@
     <meta name="format-detection" content="telephone=no">
     <meta name="theme-color" content="#667eea">
     <title>売上管理システム</title>
-<<<<<<< HEAD
-=======
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-sync.js"></script>
->>>>>>> c24a341b1477fb90d6bbbc65e1e9e3ec38346e30
     <style>
         * {
             margin: 0;
@@ -968,29 +965,6 @@
                 font-size: 7px;
             }
 
-<<<<<<< HEAD
-            .weekly-total {
-                display: table-cell !important;
-                font-size: 8px;
-                padding: 3px;
-                min-width: 80px;
-                width: 15%;
-            }
-            
-            .weekly-total select {
-                font-size: 8px !important;
-                padding: 2px !important;
-            }
-            
-            .weekly-total input {
-                font-size: 8px !important;
-                padding: 2px !important;
-            }
-            
-            .weekly-total div {
-                font-size: 8px !important;
-                line-height: 1.3;
-=======
             .weekly-total-row {
                 font-size: 8px;
                 padding: 5px;
@@ -1022,7 +996,6 @@
             .weekly-total-metrics {
                 font-size: 8px !important;
                 gap: 8px;
->>>>>>> c24a341b1477fb90d6bbbc65e1e9e3ec38346e30
             }
 
             .monthly-total {
@@ -1468,14 +1441,6 @@
             justify-content: space-between;
         }
 
-<<<<<<< HEAD
-        .weekly-total {
-            background: #fce7f3;
-            font-weight: bold;
-            border: 2px solid #ec4899;
-            width: 20%;
-            min-width: 150px;
-=======
         .weekly-total-row {
             background: #fce7f3;
             font-weight: bold;
@@ -1533,7 +1498,6 @@
         
         .weekly-total-metrics span {
             white-space: nowrap;
->>>>>>> c24a341b1477fb90d6bbbc65e1e9e3ec38346e30
         }
 
         .monthly-total {
@@ -1708,12 +1672,9 @@
             font-weight: bold;
         }
     </style>
-<<<<<<< HEAD
     <!-- Supabase SDKを追加 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-sync.js"></script>
-=======
->>>>>>> c24a341b1477fb90d6bbbc65e1e9e3ec38346e30
 </head>
 <body>
     <div class="login-container" id="loginContainer">
@@ -1799,10 +1760,6 @@
                         <th>木</th>
                         <th>金</th>
                         <th>土</th>
-<<<<<<< HEAD
-                        <th style="background: #fce7f3; color: #831843; border: 2px solid #ec4899;">週計</th>
-=======
->>>>>>> c24a341b1477fb90d6bbbc65e1e9e3ec38346e30
                     </tr>
                 </thead>
                 <tbody id="calendarBody">
@@ -1846,15 +1803,11 @@
             </div>
         </div>
 
-<<<<<<< HEAD
-                    <button class="nav-btn" onclick="saveAllData()" style="margin-top: 20px; background: #6b7280;">手動バックアップ</button>
-                    <button class="nav-btn" onclick="testSupabaseConnection()" style="margin-top: 10px; background: #059669;">Supabase接続テスト</button>
-=======
                     <button class="nav-btn" id="backupBtn" style="margin-top: 20px; background: #6b7280;">手動バックアップ</button>
                     <button class="nav-btn" id="downloadBtn" style="margin-top: 10px; background: #3b82f6;">データをダウンロード</button>
                     <button class="nav-btn" id="uploadBtn" style="margin-top: 10px; background: #8b5cf6;">データをアップロード</button>
+                    <button class="nav-btn" onclick="testSupabaseConnection()" style="margin-top: 10px; background: #059669;">Supabase接続テスト</button>
                     <input type="file" id="fileInput" accept=".json" style="display: none;">
->>>>>>> c24a341b1477fb90d6bbbc65e1e9e3ec38346e30
                     <div style="font-size: 12px; color: #10b981; margin-top: 5px; text-align: center;">※ データは自動保存されています</div>
                     <div class="message" id="message"></div>
                 </div>
@@ -2362,48 +2315,81 @@
                 document.getElementById('dashboard').style.display = 'block';
                 loadData();
                 updateCalendar();
-<<<<<<< HEAD
-                
-                // Supabase同期の初期化
-                console.log('Supabase初期化開始...');
-                if (typeof initSupabase === 'function' && initSupabase()) {
-                    console.log('Supabase接続成功！');
-                    console.log('使用中のユーザーID:', getUserId());
-                    
-                    // 初回同期
-                    syncAllData().then(needsUpdate => {
-                        console.log('同期完了。更新が必要:', needsUpdate);
-                        if (needsUpdate) {
-                            loadData();
-                            updateCalendar();
-                            updateStats();
-                        }
-                    }).catch(error => {
-                        console.error('同期エラー:', error);
-                    });
-                    
-                    // リアルタイム同期を設定
-                    setupRealtimeSync();
-                    
-                    // 定期的な同期（30秒ごと）
-                    setInterval(() => {
-                        console.log('定期同期実行中...');
-                        syncAllData().then(() => {
-                            console.log('定期同期完了');
-                        }).catch(error => {
-                            console.error('定期同期エラー:', error);
-                        });
-                    }, 30000);
-                } else {
-                    console.error('Supabase初期化失敗！supabase-sync.jsが読み込まれているか確認してください。');
-                }
-=======
->>>>>>> c24a341b1477fb90d6bbbc65e1e9e3ec38346e30
             } else {
                 alert('パスワードが正しくありません。');
                 document.getElementById('password').value = '';
             }
         });
+
+        // Supabase接続テスト機能
+        async function testSupabaseConnection() {
+            console.log('=== Supabase接続テスト開始 ===');
+            const results = [];
+            
+            // 1. SDK読み込みチェック
+            if (typeof window.supabase !== 'undefined') {
+                results.push('✅ Supabase SDKが読み込まれています');
+            } else {
+                results.push('❌ Supabase SDKが読み込まれていません');
+                alert('Supabase SDKが読み込まれていません。ページを再読み込みしてください。');
+                return;
+            }
+            
+            // 2. 初期化チェック
+            if (typeof supabase !== 'undefined' && supabase) {
+                results.push('✅ Supabaseクライアントが初期化されています');
+            } else {
+                results.push('❌ Supabaseクライアントが初期化されていません');
+                if (typeof initSupabase === 'function' && initSupabase()) {
+                    results.push('✅ Supabaseクライアントを初期化しました');
+                } else {
+                    results.push('❌ Supabaseクライアントの初期化に失敗しました');
+                    alert('Supabaseの初期化に失敗しました。設定を確認してください。');
+                    return;
+                }
+            }
+            
+            // 3. ユーザーID確認
+            if (typeof getUserId === 'function') {
+                const userId = getUserId();
+                results.push(`ℹ️ 使用中のユーザーID: ${userId}`);
+            }
+            
+            // 4. テストデータの保存
+            try {
+                if (typeof saveToSupabase === 'function') {
+                    const testData = { test: true, timestamp: new Date().toISOString() };
+                    const saveResult = await saveToSupabase('test', testData);
+                    if (saveResult) {
+                        results.push('✅ テストデータの保存に成功しました');
+                    } else {
+                        results.push('❌ テストデータの保存に失敗しました');
+                    }
+                }
+            } catch (error) {
+                results.push(`❌ 保存エラー: ${error.message}`);
+            }
+            
+            // 5. テストデータの取得
+            try {
+                if (typeof loadFromSupabase === 'function') {
+                    const loadResult = await loadFromSupabase('test');
+                    if (loadResult) {
+                        results.push('✅ テストデータの取得に成功しました');
+                    } else {
+                        results.push('⚠️ テストデータが見つかりません');
+                    }
+                }
+            } catch (error) {
+                results.push(`❌ 取得エラー: ${error.message}`);
+            }
+            
+            // 結果をコンソールに表示
+            console.log(results.join('\n'));
+            
+            // 結果をアラートで表示
+            alert('Supabase接続テスト結果:\n\n' + results.join('\n') + '\n\n詳細はブラウザのコンソール（F12キー）で確認できます。');
+        }
 
         function logout() {
             document.getElementById('dashboard').style.display = 'none';
@@ -2612,17 +2598,11 @@
                     }
                 }
                 
-<<<<<<< HEAD
-                // Add weekly total cell
-                const weekTotalCell = row.insertCell();
-                weekTotalCell.className = 'weekly-total';
-=======
                 // Create weekly total row after each week
                 const weekTotalRow = tbody.insertRow();
                 const weekTotalCell = weekTotalRow.insertCell();
                 weekTotalCell.colSpan = 7; // Span across all 7 days
                 weekTotalCell.className = 'weekly-total-row';
->>>>>>> c24a341b1477fb90d6bbbc65e1e9e3ec38346e30
                 const weekId = `week-${year}-${month}-${week}`;
                 const weekData = getWeekData(weekId);
                 
@@ -2646,24 +2626,6 @@
                     });
                     
                     weekTotalCell.innerHTML = `
-<<<<<<< HEAD
-                        <div style="font-size: 10px; padding: 5px;">
-                            <select class="week-prefecture" data-week="${weekId}" style="width: 100%; font-size: 9px; padding: 2px; margin-bottom: 3px; border: 1px solid #ec4899; background: white;">
-                                ${prefectureOptions}
-                            </select>
-                            <input type="text" class="week-store" data-week="${weekId}" placeholder="店舗名" value="${weekData.store || ''}" 
-                                   style="width: 100%; font-size: 9px; padding: 2px; margin-bottom: 3px; border: 1px solid #ec4899;">
-                            ${(weeklyTotals.sales > 0 || weeklyTotals.purchase > 0 || weeklyTotals.profit > 0 || weeklyTotals.expenses > 0) ? `
-                                <div style="border-top: 1px solid #ec4899; padding-top: 3px; margin-top: 3px;">
-                                    ${weeklyTotals.purchase > 0 ? `<div>買: ¥${weeklyTotals.purchase.toLocaleString()}</div>` : ''}
-                                    ${weeklyTotals.profit > 0 ? `<div>利: ¥${weeklyTotals.profit.toLocaleString()}</div>` : ''}
-                                    ${weeklyTotals.sales > 0 ? `<div>売: ¥${weeklyTotals.sales.toLocaleString()}</div>` : ''}
-                                    ${weeklyTotals.expenses > 0 ? `<div>経: ¥${weeklyTotals.expenses.toLocaleString()}</div>` : ''}
-                                    ${(weeklyTotals.profit > 0 || weeklyTotals.expenses > 0) ? `<div style="border-top: 1px solid #ec4899; margin-top: 3px; padding-top: 3px; font-weight: bold; color: ${operatingProfit >= 0 ? '#059669' : '#dc2626'};">営業利益: ¥${operatingProfit.toLocaleString()}</div>` : ''}
-                                    ${(weeklyTotals.visitors > 0 || weeklyTotals.contracts > 0) ? `<div>来/約: ${weeklyTotals.visitors}/${weeklyTotals.contracts}</div>` : ''}
-                                </div>
-                            ` : '<div style="margin-top: 5px;">-</div>'}
-=======
                         <div class="weekly-total-content">
                             <span class="weekly-label">週計</span>
                             <div class="weekly-total-header">
@@ -2682,7 +2644,6 @@
                                     ${(weeklyTotals.visitors > 0 || weeklyTotals.contracts > 0) ? `<span>来/約: ${weeklyTotals.visitors}/${weeklyTotals.contracts}</span>` : ''}
                                 </div>
                             ` : '<div class="weekly-total-metrics"><span>-</span></div>'}
->>>>>>> c24a341b1477fb90d6bbbc65e1e9e3ec38346e30
                         </div>
                     `;
                     
@@ -3033,113 +2994,6 @@
             document.getElementById('conversionRate').textContent = `${conversionRate}%`;
         }
 
-<<<<<<< HEAD
-        async function saveAllData() {
-            // ローカルストレージに保存
-            localStorage.setItem('calendarData', JSON.stringify(calendarData));
-            localStorage.setItem('weeklyData', JSON.stringify(weeklyData));
-            
-            // Supabaseにも保存を試みる
-            if (typeof saveToSupabase === 'function' && supabase) {
-                try {
-                    console.log('Supabaseにバックアップ中...');
-                    const calendarSaved = await saveToSupabase('calendar', calendarData);
-                    const weeklySaved = await saveToSupabase('weekly', weeklyData);
-                    
-                    if (calendarSaved && weeklySaved) {
-                        showMessage('データをローカルとクラウドにバックアップしました！', 'success');
-                    } else {
-                        showMessage('データをローカルにバックアップしました（クラウド保存失敗）', 'warning');
-                    }
-                } catch (error) {
-                    console.error('Supabaseバックアップエラー:', error);
-                    showMessage('データをローカルにバックアップしました', 'success');
-                }
-            } else {
-                showMessage('データをローカルにバックアップしました', 'success');
-            }
-        }
-        
-        // Supabase接続テスト機能
-        async function testSupabaseConnection() {
-            console.log('=== Supabase接続テスト開始 ===');
-            const results = [];
-            
-            // 1. SDK読み込みチェック
-            if (typeof window.supabase !== 'undefined') {
-                results.push('✅ Supabase SDKが読み込まれています');
-            } else {
-                results.push('❌ Supabase SDKが読み込まれていません');
-                alert('Supabase SDKが読み込まれていません。ページを再読み込みしてください。');
-                return;
-            }
-            
-            // 2. 初期化チェック
-            if (supabase) {
-                results.push('✅ Supabaseクライアントが初期化されています');
-            } else {
-                results.push('❌ Supabaseクライアントが初期化されていません');
-                if (initSupabase()) {
-                    results.push('✅ Supabaseクライアントを初期化しました');
-                } else {
-                    results.push('❌ Supabaseクライアントの初期化に失敗しました');
-                    alert('Supabaseの初期化に失敗しました。設定を確認してください。');
-                    return;
-                }
-            }
-            
-            // 3. ユーザーID確認
-            const userId = getUserId();
-            results.push(`ℹ️ 使用中のユーザーID: ${userId}`);
-            
-            // 4. テストデータの保存
-            try {
-                const testData = { test: true, timestamp: new Date().toISOString() };
-                const saveResult = await saveToSupabase('test', testData);
-                if (saveResult) {
-                    results.push('✅ テストデータの保存に成功しました');
-                } else {
-                    results.push('❌ テストデータの保存に失敗しました');
-                }
-            } catch (error) {
-                results.push(`❌ 保存エラー: ${error.message}`);
-            }
-            
-            // 5. テストデータの取得
-            try {
-                const loadResult = await loadFromSupabase('test');
-                if (loadResult) {
-                    results.push('✅ テストデータの取得に成功しました');
-                    results.push(`ℹ️ 取得したデータ: ${JSON.stringify(loadResult.data)}`);
-                } else {
-                    results.push('⚠️ テストデータが見つかりません');
-                }
-            } catch (error) {
-                results.push(`❌ 取得エラー: ${error.message}`);
-            }
-            
-            // 6. 実際のデータ同期状態を確認
-            try {
-                const remoteCalendar = await loadFromSupabase('calendar');
-                const remoteWeekly = await loadFromSupabase('weekly');
-                const remoteDeposit = await loadFromSupabase('deposit');
-                const remoteWithdraw = await loadFromSupabase('withdraw');
-                
-                results.push('📊 Supabase上のデータ状態:');
-                results.push(`  カレンダー: ${remoteCalendar ? '存在' : '未保存'}`);
-                results.push(`  週次データ: ${remoteWeekly ? '存在' : '未保存'}`);
-                results.push(`  入金データ: ${remoteDeposit ? '存在' : '未保存'}`);
-                results.push(`  出金データ: ${remoteWithdraw ? '存在' : '未保存'}`);
-            } catch (error) {
-                results.push(`❌ データ確認エラー: ${error.message}`);
-            }
-            
-            // 結果をコンソールに表示
-            console.log(results.join('\n'));
-            
-            // 結果をアラートで表示
-            alert('Supabase接続テスト結果:\n\n' + results.join('\n') + '\n\n詳細はブラウザのコンソール（F12キー）で確認できます。');
-=======
         function saveAllData() {
             try {
                 const timestamp = new Date().toISOString();
@@ -3232,7 +3086,6 @@
                 }
             };
             reader.readAsText(file);
->>>>>>> c24a341b1477fb90d6bbbc65e1e9e3ec38346e30
         }
 
         function loadData() {
@@ -3980,8 +3833,6 @@
                 cashflowMonth.value = today.getMonth() + 1;
             }
             
-<<<<<<< HEAD
-=======
             // ボタンのイベントリスナーを設定
             document.getElementById('backupBtn').addEventListener('click', saveAllData);
             document.getElementById('downloadBtn').addEventListener('click', downloadData);
@@ -4019,7 +3870,6 @@
                 }, 30000); // 30秒ごとに同期
             }
             
->>>>>>> c24a341b1477fb90d6bbbc65e1e9e3ec38346e30
             // Set today's date as default for deposit and withdraw forms
             const depositDateInput = document.getElementById('depositDate');
             const withdrawDateInput = document.getElementById('withdrawDate');
