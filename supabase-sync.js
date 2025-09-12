@@ -1,6 +1,6 @@
 // Supabase Configuration
-const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // Supabaseプロジェクトから取得
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Supabaseプロジェクトから取得
+const SUPABASE_URL = https://qddyqqmpqqkkbibplsmn.supabase.co
+const SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkZHlxcW1wcXFra2JpYnBsc21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NTc5MTgsImV4cCI6MjA3MzIzMzkxOH0.KAgZ8D5cRgdPS-AoIeG7bwFiNzbGV8TW22rhGLft6sY
 
 // Supabaseクライアントの初期化
 let supabase = null;
