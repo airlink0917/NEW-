@@ -7,12 +7,18 @@ let supabase = null;
 
 // ユーザーIDの生成または取得
 function getUserId() {
-    let userId = localStorage.getItem('userId');
-    if (!userId) {
-        userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('userId', userId);
-    }
-    return userId;
+    // 全デバイスで共通のIDを使用（チーム共有用）
+    // 個人利用の場合はこのIDをそのまま使用
+    // チーム利用の場合は'team_2024'などに変更
+    return 'shared_user_2024';
+    
+    // 元のコード（個別管理したい場合はコメントを外す）
+    // let userId = localStorage.getItem('userId');
+    // if (!userId) {
+    //     userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    //     localStorage.setItem('userId', userId);
+    // }
+    // return userId;
 }
 
 // Supabaseの初期化
