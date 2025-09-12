@@ -968,22 +968,26 @@
             }
             
             .weekly-total-content {
-                flex-direction: column;
-                align-items: flex-start;
+                flex-wrap: wrap;
                 gap: 5px;
             }
             
+            .weekly-label {
+                font-size: 8px;
+                padding: 1px 4px;
+            }
+            
             .weekly-total-header {
-                width: 100%;
-                flex-direction: column;
+                flex-wrap: wrap;
                 gap: 3px;
             }
             
             .weekly-total-header select,
             .weekly-total-header input {
-                width: 100% !important;
                 font-size: 8px !important;
-                padding: 2px !important;
+                padding: 1px 2px !important;
+                height: 16px !important;
+                min-width: 70px !important;
             }
             
             .weekly-total-metrics {
@@ -1444,15 +1448,42 @@
         .weekly-total-content {
             display: flex;
             align-items: center;
-            justify-content: space-between;
             gap: 10px;
             font-size: 10px;
+        }
+        
+        .weekly-label {
+            background: #ec4899;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 10px;
+            white-space: nowrap;
         }
         
         .weekly-total-header {
             display: flex;
             align-items: center;
             gap: 5px;
+        }
+        
+        .weekly-total-header select,
+        .weekly-total-header input {
+            font-size: 9px;
+            padding: 1px 4px;
+            height: 18px;
+            line-height: 1;
+            border: 1px solid #ec4899;
+            background: white;
+        }
+        
+        .weekly-total-header select {
+            min-width: 100px;
+        }
+        
+        .weekly-total-header input {
+            min-width: 80px;
         }
         
         .weekly-total-metrics {
@@ -1723,7 +1754,6 @@
                         <th>木</th>
                         <th>金</th>
                         <th>土</th>
-                        <th style="background: #fce7f3; color: #831843; border: 2px solid #ec4899;">週計</th>
                     </tr>
                 </thead>
                 <tbody id="calendarBody">
@@ -2517,12 +2547,12 @@
                     
                     weekTotalCell.innerHTML = `
                         <div class="weekly-total-content">
+                            <span class="weekly-label">週計</span>
                             <div class="weekly-total-header">
-                                <select class="week-prefecture" data-week="${weekId}" style="font-size: 9px; padding: 2px; margin-right: 5px; border: 1px solid #ec4899; background: white;">
+                                <select class="week-prefecture" data-week="${weekId}">
                                     ${prefectureOptions}
                                 </select>
-                                <input type="text" class="week-store" data-week="${weekId}" placeholder="店舗名" value="${weekData.store || ''}" 
-                                       style="font-size: 9px; padding: 2px; margin-right: 5px; border: 1px solid #ec4899;">
+                                <input type="text" class="week-store" data-week="${weekId}" placeholder="店舗名" value="${weekData.store || ''}">
                             </div>
                             ${(weeklyTotals.sales > 0 || weeklyTotals.purchase > 0 || weeklyTotals.profit > 0 || weeklyTotals.expenses > 0) ? `
                                 <div class="weekly-total-metrics">
