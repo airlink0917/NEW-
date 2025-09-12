@@ -1,0 +1,52 @@
+========================================
+    Supabase 設定情報
+========================================
+
+プロジェクト作成日: 2025年1月
+プロジェクトID: qddyqqmpqqkkbibplsmn
+
+========================================
+    APIキー情報
+========================================
+
+【Project URL】
+https://qddyqqmpqqkkbibplsmn.supabase.co
+
+【anon public キー】
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkZHlxcW1wcXFra2JpYnBsc21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NTc5MTgsImV4cCI6MjA3MzIzMzkxOH0.KAgZ8D5cRgdPS-AoIeG7bwFiNzbGV8TW22rhGLft6sY
+
+========================================
+    supabase-sync.js への設定方法
+========================================
+
+1. GitHubで supabase-sync.js を開く
+   https://github.com/airlink0917/NEW-
+
+2. 以下のように変更：
+
+【変更前】
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+【変更後】
+const SUPABASE_URL = 'https://qddyqqmpqqkkbibplsmn.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkZHlxcW1wcXFra2JpYnBsc21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NTc5MTgsImV4cCI6MjA3MzIzMzkxOH0.KAgZ8D5cRgdPS-AoIeG7bwFiNzbGV8TW22rhGLft6sY';
+
+========================================
+    重要な注意事項
+========================================
+
+※ このファイルは安全に保管してください
+※ anon publicキーは公開しても安全ですが、むやみに共有しないでください
+※ service_roleキーは絶対に公開しないでください（今回は使用しません）
+
+========================================
+    次のステップ
+========================================
+
+1. GitHubで supabase-sync.js を編集
+2. 上記の値を貼り付けて保存
+3. Vercelが自動デプロイするのを待つ（約5分）
+4. https://new-id68.vercel.app/dashboard.html で動作確認
+
+========================================

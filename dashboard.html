@@ -1608,6 +1608,9 @@
             font-weight: bold;
         }
     </style>
+    <!-- Supabase SDKを追加 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-sync.js"></script>
 </head>
 <body>
     <div class="login-container" id="loginContainer">
@@ -1738,6 +1741,7 @@
         </div>
 
                     <button class="nav-btn" onclick="saveAllData()" style="margin-top: 20px; background: #6b7280;">手動バックアップ</button>
+                    <button class="nav-btn" onclick="testSupabaseConnection()" style="margin-top: 10px; background: #059669;">Supabase接続テスト</button>
                     <div style="font-size: 12px; color: #10b981; margin-top: 5px; text-align: center;">※ データは自動保存されています</div>
                     <div class="message" id="message"></div>
                 </div>
@@ -2245,6 +2249,40 @@
                 document.getElementById('dashboard').style.display = 'block';
                 loadData();
                 updateCalendar();
+                
+                // Supabase同期の初期化
+                console.log('Supabase初期化開始...');
+                if (typeof initSupabase === 'function' && initSupabase()) {
+                    console.log('Supabase接続成功！');
+                    console.log('使用中のユーザーID:', getUserId());
+                    
+                    // 初回同期
+                    syncAllData().then(needsUpdate => {
+                        console.log('同期完了。更新が必要:', needsUpdate);
+                        if (needsUpdate) {
+                            loadData();
+                            updateCalendar();
+                            updateStats();
+                        }
+                    }).catch(error => {
+                        console.error('同期エラー:', error);
+                    });
+                    
+                    // リアルタイム同期を設定
+                    setupRealtimeSync();
+                    
+                    // 定期的な同期（30秒ごと）
+                    setInterval(() => {
+                        console.log('定期同期実行中...');
+                        syncAllData().then(() => {
+                            console.log('定期同期完了');
+                        }).catch(error => {
+                            console.error('定期同期エラー:', error);
+                        });
+                    }, 30000);
+                } else {
+                    console.error('Supabase初期化失敗！supabase-sync.jsが読み込まれているか確認してください。');
+                }
             } else {
                 alert('パスワードが正しくありません。');
                 document.getElementById('password').value = '';
@@ -2850,10 +2888,111 @@
             document.getElementById('conversionRate').textContent = `${conversionRate}%`;
         }
 
-        function saveAllData() {
+        async function saveAllData() {
+            // ローカルストレージに保存
             localStorage.setItem('calendarData', JSON.stringify(calendarData));
             localStorage.setItem('weeklyData', JSON.stringify(weeklyData));
-            showMessage('データをバックアップしました！', 'success');
+            
+            // Supabaseにも保存を試みる
+            if (typeof saveToSupabase === 'function' && supabase) {
+                try {
+                    console.log('Supabaseにバックアップ中...');
+                    const calendarSaved = await saveToSupabase('calendar', calendarData);
+                    const weeklySaved = await saveToSupabase('weekly', weeklyData);
+                    
+                    if (calendarSaved && weeklySaved) {
+                        showMessage('データをローカルとクラウドにバックアップしました！', 'success');
+                    } else {
+                        showMessage('データをローカルにバックアップしました（クラウド保存失敗）', 'warning');
+                    }
+                } catch (error) {
+                    console.error('Supabaseバックアップエラー:', error);
+                    showMessage('データをローカルにバックアップしました', 'success');
+                }
+            } else {
+                showMessage('データをローカルにバックアップしました', 'success');
+            }
+        }
+        
+        // Supabase接続テスト機能
+        async function testSupabaseConnection() {
+            console.log('=== Supabase接続テスト開始 ===');
+            const results = [];
+            
+            // 1. SDK読み込みチェック
+            if (typeof window.supabase !== 'undefined') {
+                results.push('✅ Supabase SDKが読み込まれています');
+            } else {
+                results.push('❌ Supabase SDKが読み込まれていません');
+                alert('Supabase SDKが読み込まれていません。ページを再読み込みしてください。');
+                return;
+            }
+            
+            // 2. 初期化チェック
+            if (supabase) {
+                results.push('✅ Supabaseクライアントが初期化されています');
+            } else {
+                results.push('❌ Supabaseクライアントが初期化されていません');
+                if (initSupabase()) {
+                    results.push('✅ Supabaseクライアントを初期化しました');
+                } else {
+                    results.push('❌ Supabaseクライアントの初期化に失敗しました');
+                    alert('Supabaseの初期化に失敗しました。設定を確認してください。');
+                    return;
+                }
+            }
+            
+            // 3. ユーザーID確認
+            const userId = getUserId();
+            results.push(`ℹ️ 使用中のユーザーID: ${userId}`);
+            
+            // 4. テストデータの保存
+            try {
+                const testData = { test: true, timestamp: new Date().toISOString() };
+                const saveResult = await saveToSupabase('test', testData);
+                if (saveResult) {
+                    results.push('✅ テストデータの保存に成功しました');
+                } else {
+                    results.push('❌ テストデータの保存に失敗しました');
+                }
+            } catch (error) {
+                results.push(`❌ 保存エラー: ${error.message}`);
+            }
+            
+            // 5. テストデータの取得
+            try {
+                const loadResult = await loadFromSupabase('test');
+                if (loadResult) {
+                    results.push('✅ テストデータの取得に成功しました');
+                    results.push(`ℹ️ 取得したデータ: ${JSON.stringify(loadResult.data)}`);
+                } else {
+                    results.push('⚠️ テストデータが見つかりません');
+                }
+            } catch (error) {
+                results.push(`❌ 取得エラー: ${error.message}`);
+            }
+            
+            // 6. 実際のデータ同期状態を確認
+            try {
+                const remoteCalendar = await loadFromSupabase('calendar');
+                const remoteWeekly = await loadFromSupabase('weekly');
+                const remoteDeposit = await loadFromSupabase('deposit');
+                const remoteWithdraw = await loadFromSupabase('withdraw');
+                
+                results.push('📊 Supabase上のデータ状態:');
+                results.push(`  カレンダー: ${remoteCalendar ? '存在' : '未保存'}`);
+                results.push(`  週次データ: ${remoteWeekly ? '存在' : '未保存'}`);
+                results.push(`  入金データ: ${remoteDeposit ? '存在' : '未保存'}`);
+                results.push(`  出金データ: ${remoteWithdraw ? '存在' : '未保存'}`);
+            } catch (error) {
+                results.push(`❌ データ確認エラー: ${error.message}`);
+            }
+            
+            // 結果をコンソールに表示
+            console.log(results.join('\n'));
+            
+            // 結果をアラートで表示
+            alert('Supabase接続テスト結果:\n\n' + results.join('\n') + '\n\n詳細はブラウザのコンソール（F12キー）で確認できます。');
         }
 
         function loadData() {
