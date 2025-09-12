@@ -962,27 +962,33 @@
                 font-size: 7px;
             }
 
-            .weekly-total {
-                display: table-cell !important;
+            .weekly-total-row {
                 font-size: 8px;
-                padding: 3px;
-                min-width: 80px;
-                width: 15%;
+                padding: 5px;
             }
             
-            .weekly-total select {
+            .weekly-total-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .weekly-total-header {
+                width: 100%;
+                flex-direction: column;
+                gap: 3px;
+            }
+            
+            .weekly-total-header select,
+            .weekly-total-header input {
+                width: 100% !important;
                 font-size: 8px !important;
                 padding: 2px !important;
             }
             
-            .weekly-total input {
+            .weekly-total-metrics {
                 font-size: 8px !important;
-                padding: 2px !important;
-            }
-            
-            .weekly-total div {
-                font-size: 8px !important;
-                line-height: 1.3;
+                gap: 8px;
             }
 
             .monthly-total {
@@ -1428,12 +1434,36 @@
             justify-content: space-between;
         }
 
-        .weekly-total {
+        .weekly-total-row {
             background: #fce7f3;
             font-weight: bold;
             border: 2px solid #ec4899;
-            width: 20%;
-            min-width: 150px;
+            padding: 8px;
+        }
+        
+        .weekly-total-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 10px;
+        }
+        
+        .weekly-total-header {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .weekly-total-metrics {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .weekly-total-metrics span {
+            white-space: nowrap;
         }
 
         .monthly-total {
@@ -2458,9 +2488,11 @@
                     }
                 }
                 
-                // Add weekly total cell
-                const weekTotalCell = row.insertCell();
-                weekTotalCell.className = 'weekly-total';
+                // Create weekly total row after each week
+                const weekTotalRow = tbody.insertRow();
+                const weekTotalCell = weekTotalRow.insertCell();
+                weekTotalCell.colSpan = 7; // Span across all 7 days
+                weekTotalCell.className = 'weekly-total-row';
                 const weekId = `week-${year}-${month}-${week}`;
                 const weekData = getWeekData(weekId);
                 
@@ -2484,22 +2516,24 @@
                     });
                     
                     weekTotalCell.innerHTML = `
-                        <div style="font-size: 10px; padding: 5px;">
-                            <select class="week-prefecture" data-week="${weekId}" style="width: 100%; font-size: 9px; padding: 2px; margin-bottom: 3px; border: 1px solid #ec4899; background: white;">
-                                ${prefectureOptions}
-                            </select>
-                            <input type="text" class="week-store" data-week="${weekId}" placeholder="店舗名" value="${weekData.store || ''}" 
-                                   style="width: 100%; font-size: 9px; padding: 2px; margin-bottom: 3px; border: 1px solid #ec4899;">
+                        <div class="weekly-total-content">
+                            <div class="weekly-total-header">
+                                <select class="week-prefecture" data-week="${weekId}" style="font-size: 9px; padding: 2px; margin-right: 5px; border: 1px solid #ec4899; background: white;">
+                                    ${prefectureOptions}
+                                </select>
+                                <input type="text" class="week-store" data-week="${weekId}" placeholder="店舗名" value="${weekData.store || ''}" 
+                                       style="font-size: 9px; padding: 2px; margin-right: 5px; border: 1px solid #ec4899;">
+                            </div>
                             ${(weeklyTotals.sales > 0 || weeklyTotals.purchase > 0 || weeklyTotals.profit > 0 || weeklyTotals.expenses > 0) ? `
-                                <div style="border-top: 1px solid #ec4899; padding-top: 3px; margin-top: 3px;">
-                                    ${weeklyTotals.purchase > 0 ? `<div>買: ¥${weeklyTotals.purchase.toLocaleString()}</div>` : ''}
-                                    ${weeklyTotals.profit > 0 ? `<div>利: ¥${weeklyTotals.profit.toLocaleString()}</div>` : ''}
-                                    ${weeklyTotals.sales > 0 ? `<div>売: ¥${weeklyTotals.sales.toLocaleString()}</div>` : ''}
-                                    ${weeklyTotals.expenses > 0 ? `<div>経: ¥${weeklyTotals.expenses.toLocaleString()}</div>` : ''}
-                                    ${(weeklyTotals.profit > 0 || weeklyTotals.expenses > 0) ? `<div style="border-top: 1px solid #ec4899; margin-top: 3px; padding-top: 3px; font-weight: bold; color: ${operatingProfit >= 0 ? '#059669' : '#dc2626'};">営業利益: ¥${operatingProfit.toLocaleString()}</div>` : ''}
-                                    ${(weeklyTotals.visitors > 0 || weeklyTotals.contracts > 0) ? `<div>来/約: ${weeklyTotals.visitors}/${weeklyTotals.contracts}</div>` : ''}
+                                <div class="weekly-total-metrics">
+                                    ${weeklyTotals.purchase > 0 ? `<span>買: ¥${weeklyTotals.purchase.toLocaleString()}</span>` : ''}
+                                    ${weeklyTotals.profit > 0 ? `<span>利: ¥${weeklyTotals.profit.toLocaleString()}</span>` : ''}
+                                    ${weeklyTotals.sales > 0 ? `<span>売: ¥${weeklyTotals.sales.toLocaleString()}</span>` : ''}
+                                    ${weeklyTotals.expenses > 0 ? `<span>経: ¥${weeklyTotals.expenses.toLocaleString()}</span>` : ''}
+                                    ${(weeklyTotals.profit > 0 || weeklyTotals.expenses > 0) ? `<span style="font-weight: bold; color: ${operatingProfit >= 0 ? '#059669' : '#dc2626'};">営業利益: ¥${operatingProfit.toLocaleString()}</span>` : ''}
+                                    ${(weeklyTotals.visitors > 0 || weeklyTotals.contracts > 0) ? `<span>来/約: ${weeklyTotals.visitors}/${weeklyTotals.contracts}</span>` : ''}
                                 </div>
-                            ` : '<div style="margin-top: 5px;">-</div>'}
+                            ` : '<div class="weekly-total-metrics"><span>-</span></div>'}
                         </div>
                     `;
                     
