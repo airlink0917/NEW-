@@ -2491,11 +2491,12 @@
                         cell.onclick = () => openModal(nextDateStr, nextDay, nextMonth, nextYear);
                     } else {
                         // Current month dates
-                        const currentDate = new Date(year, month - 1, date);
-                        const dateStr = `${year}-${month.toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`;
+                        const currentDay = date;  // Capture current date value
+                        const currentDate = new Date(year, month - 1, currentDay);
+                        const dateStr = `${year}-${month.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')}`;
                         
                         dayDiv.className = 'day-number';
-                        dayDiv.textContent = date;
+                        dayDiv.textContent = currentDay;
                         
                         // Add day of week classes
                         if (day === 0) cell.className = 'sunday';
@@ -2599,8 +2600,8 @@
                         cell.appendChild(dayDiv);
                         cell.appendChild(contentDiv);
                         
-                        // Add click event
-                        cell.onclick = () => openModal(dateStr, date, month, year);
+                        // Add click event (use currentDay instead of date)
+                        cell.onclick = () => openModal(dateStr, currentDay, month, year);
                         
                         date++;
                     }
