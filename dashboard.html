@@ -2995,7 +2995,8 @@
                 }
             }
             
-            const conversionRate = visitorsTotal > 0 ? Math.round((contractsTotal / visitorsTotal) * 100) : 0;
+            // 買取率 = (買取額 / 売上) * 100
+            const conversionRate = salesTotal > 0 ? Math.round((purchaseTotal / salesTotal) * 100) : 0;
             const operatingProfit = profitTotal - expensesTotal;
             
             document.getElementById('monthTotal').textContent = `¥${salesTotal.toLocaleString()}`;
@@ -3208,7 +3209,8 @@
                 }
                 
                 monthData.operatingProfit = monthData.profit - monthData.expenses;
-                monthData.conversionRate = monthData.visitors > 0 ? Math.round((monthData.contracts / monthData.visitors) * 100) : 0;
+                // 月次買取率 = (買取額 / 売上) * 100
+                monthData.conversionRate = monthData.sales > 0 ? Math.round((monthData.purchase / monthData.sales) * 100) : 0;
                 monthData.purchaseRate = monthData.sales > 0 ? Math.round((monthData.purchase / monthData.sales) * 100) : 0;
                 
                 monthlyData.push(monthData);
@@ -3223,7 +3225,8 @@
             }
             
             yearlyTotals.operatingProfit = yearlyTotals.profit - yearlyTotals.expenses;
-            yearlyTotals.conversionRate = yearlyTotals.visitors > 0 ? Math.round((yearlyTotals.contracts / yearlyTotals.visitors) * 100) : 0;
+            // 年間買取率 = (年間買取額 / 年間売上) * 100
+            yearlyTotals.conversionRate = yearlyTotals.sales > 0 ? Math.round((yearlyTotals.purchase / yearlyTotals.sales) * 100) : 0;
             yearlyTotals.purchaseRate = yearlyTotals.sales > 0 ? Math.round((yearlyTotals.purchase / yearlyTotals.sales) * 100) : 0;
             
             // Generate HTML
@@ -3246,7 +3249,6 @@
                             <th>営業利益</th>
                             <th>来店数</th>
                             <th>成約数</th>
-                            <th>買取率</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -3265,7 +3267,6 @@
                         <td class="${profitClass}">¥${data.operatingProfit.toLocaleString()}</td>
                         <td>${data.visitors}人</td>
                         <td>${data.contracts}件</td>
-                        <td>${data.conversionRate}%</td>
                     </tr>
                 `;
             });
@@ -3282,7 +3283,6 @@
                         <td class="${yearlyProfitClass}">¥${yearlyTotals.operatingProfit.toLocaleString()}</td>
                         <td>${yearlyTotals.visitors}人</td>
                         <td>${yearlyTotals.contracts}件</td>
-                        <td>${yearlyTotals.conversionRate}%</td>
                     </tr>
                 </tbody>
                 </table>
@@ -3303,7 +3303,6 @@
                         <div style="color: ${yearlyTotals.purchaseRate > 70 ? '#dc2626' : yearlyTotals.purchaseRate > 50 ? '#f59e0b' : '#059669'}; font-weight: bold;">
                             年間買取率: ${yearlyTotals.purchaseRate}%
                         </div>
-                        <div>年間買取率: ${yearlyTotals.conversionRate}%</div>
                     </div>
                 </div>
             `;
