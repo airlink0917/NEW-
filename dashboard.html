@@ -1024,12 +1024,20 @@
                 gap: 3px;
             }
             
-            .weekly-total-header select,
-            .weekly-total-header input {
+            .week-prefecture {
                 font-size: 8px !important;
                 padding: 1px 2px !important;
                 height: 16px !important;
-                min-width: 70px !important;
+                min-width: 50px !important;
+                max-width: 70px !important;
+            }
+            
+            .week-store {
+                font-size: 8px !important;
+                padding: 1px 2px !important;
+                height: 16px !important;
+                min-width: 100px !important;
+                max-width: 180px !important;
             }
             
             .weekly-total-metrics {
@@ -1557,6 +1565,7 @@
             display: flex;
             align-items: center;
             gap: 5px;
+            width: 100%;
         }
         
         .weekly-total-header select,
@@ -1569,12 +1578,15 @@
             background: white;
         }
         
-        .weekly-total-header select {
-            min-width: 100px;
+        .week-prefecture {
+            min-width: 60px;
+            max-width: 80px;
         }
         
-        .weekly-total-header input {
-            min-width: 80px;
+        .week-store {
+            min-width: 120px;
+            flex: 1;
+            max-width: 200px;
         }
         
         .weekly-total-metrics {
