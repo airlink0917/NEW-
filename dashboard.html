@@ -1538,9 +1538,9 @@
         }
 
         .weekly-total-row {
-            background: #fce7f3;
+            background: #fef9c3;
             font-weight: bold;
-            border: 2px solid #ec4899;
+            border: 2px solid #facc15;
             padding: 8px;
         }
         
@@ -1552,13 +1552,30 @@
         }
         
         .weekly-label {
-            background: #ec4899;
+            background: #f59e0b;
             color: white;
             padding: 2px 8px;
             border-radius: 4px;
             font-weight: bold;
             font-size: 10px;
             white-space: nowrap;
+        }
+        
+        .week-date-range {
+            font-size: 10px;
+            color: #7c2d12;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .week-end-day-selector {
+            font-size: 9px;
+            padding: 1px 3px;
+            height: 18px;
+            border: 1px solid #facc15;
+            background: white;
+            border-radius: 3px;
+            margin-left: 5px;
         }
         
         .weekly-total-header {
@@ -1574,7 +1591,7 @@
             padding: 1px 4px;
             height: 18px;
             line-height: 1;
-            border: 1px solid #ec4899;
+            border: 1px solid #facc15;
             background: white;
         }
         
@@ -2567,6 +2584,11 @@
             for (let week = 0; week < weeksNeeded; week++) {
                 const row = tbody.insertRow();
                 
+                // Track week dates for display
+                let weekStartDate = null;
+                let weekEndDate = null;
+                let weekDates = [];
+                
                 // Weekly totals for this row
                 let weeklyTotals = {
                     sales: 0,
@@ -2609,6 +2631,12 @@
                         const currentDay = date;  // Capture current date value
                         const currentDate = new Date(year, month - 1, currentDay);
                         const dateStr = `${year}-${month.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')}`;
+                        
+                        // Track week dates
+                        if (day === 1) weekStartDate = `${month}/${currentDay}`;  // Monday
+                        if (day === 5 || day === 6) {
+                            weekDates.push({day: day, date: `${month}/${currentDay}`});
+                        }
                         
                         dayDiv.className = 'day-number';
                         dayDiv.textContent = currentDay;
@@ -2754,9 +2782,23 @@
                         prefectureOptions += `<option value="${pref}" ${selected}>${pref}</option>`;
                     });
                     
+                    // Determine week end date based on saved preference or default to Saturday
+                    const usesFriday = weekData.usesFriday || false;
+                    let weekEndDate = weekStartDate ? (weekDates.length > 0 ? 
+                        (usesFriday && weekDates[0] ? weekDates[0].date : 
+                        weekDates[1] ? weekDates[1].date : weekDates[0]?.date || '') : '') : '';
+                    
+                    const dateRangeText = weekStartDate && weekEndDate ? 
+                        `${weekStartDate}～${weekEndDate}` : '';
+                    
                     weekTotalCell.innerHTML = `
                         <div class="weekly-total-content">
                             <span class="weekly-label">週計</span>
+                            <span class="week-date-range">${dateRangeText}</span>
+                            <select class="week-end-day-selector" data-week="${weekId}">
+                                <option value="saturday" ${!usesFriday ? 'selected' : ''}>土曜</option>
+                                <option value="friday" ${usesFriday ? 'selected' : ''}>金曜</option>
+                            </select>
                             <div class="weekly-total-header">
                                 <select class="week-prefecture" data-week="${weekId}">
                                     ${prefectureOptions}
@@ -2780,6 +2822,7 @@
                     setTimeout(() => {
                         const prefectureSelect = weekTotalCell.querySelector('.week-prefecture');
                         const storeInput = weekTotalCell.querySelector('.week-store');
+                        const endDaySelector = weekTotalCell.querySelector('.week-end-day-selector');
                         
                         if (prefectureSelect) {
                             prefectureSelect.addEventListener('change', function() {
@@ -2792,6 +2835,13 @@
                             storeInput.addEventListener('change', function() {
                                 saveWeekData(this.dataset.week, 'store', this.value);
                                 showAutoSaveIndicator();
+                            });
+                        }
+                        
+                        if (endDaySelector) {
+                            endDaySelector.addEventListener('change', function() {
+                                saveWeekData(this.dataset.week, 'usesFriday', this.value === 'friday');
+                                updateCalendar();
                             });
                         }
                     }, 100);
