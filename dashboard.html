@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="mobile-web-app-capable" content="yes">
@@ -316,10 +316,19 @@
             background: #5a67d8;
         }
 
+        .yearly-summary-container {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 20px;
+        }
+
         .yearly-summary-table {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 700px;
+            position: relative;
         }
 
         .yearly-summary-table th {
@@ -328,12 +337,42 @@
             padding: 10px;
             text-align: left;
             font-size: 12px;
+            position: relative;
+        }
+        
+        /* Sticky first column (month) */
+        .yearly-summary-table th:first-child,
+        .yearly-summary-table td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            background: inherit;
+        }
+        
+        .yearly-summary-table th:first-child {
+            background: #667eea;
+            z-index: 11;
+        }
+        
+        .yearly-summary-table td:first-child {
+            background: white;
+            border-right: 2px solid #e5e7eb;
+            box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .yearly-summary-table tr:hover td:first-child {
+            background: #f9fafb;
+        }
+        
+        .yearly-total-row td:first-child {
+            background: #f3f4f6 !important;
         }
 
         .yearly-summary-table td {
             padding: 8px;
             border-bottom: 1px solid #e5e7eb;
             font-size: 12px;
+            background: white;
         }
 
         .yearly-summary-table tr:hover {
@@ -985,12 +1024,20 @@
                 gap: 3px;
             }
             
-            .weekly-total-header select,
-            .weekly-total-header input {
+            .week-prefecture {
                 font-size: 8px !important;
                 padding: 1px 2px !important;
                 height: 16px !important;
-                min-width: 70px !important;
+                min-width: 50px !important;
+                max-width: 70px !important;
+            }
+            
+            .week-store {
+                font-size: 8px !important;
+                padding: 1px 2px !important;
+                height: 16px !important;
+                min-width: 100px !important;
+                max-width: 180px !important;
             }
             
             .weekly-total-metrics {
@@ -1051,14 +1098,36 @@
                 width: 100%;
             }
 
+            .yearly-summary-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
             .yearly-summary-table {
-                font-size: 10px;
+                font-size: 9px;
+                min-width: 600px;
+                display: table;
             }
 
             .yearly-summary-table th,
             .yearly-summary-table td {
-                padding: 5px;
-                font-size: 10px;
+                padding: 4px 3px;
+                font-size: 9px;
+                white-space: nowrap;
+            }
+            
+            /* Ensure sticky column works on mobile */
+            .yearly-summary-table th:first-child,
+            .yearly-summary-table td:first-child {
+                position: -webkit-sticky;
+                position: sticky;
+                left: 0;
+                z-index: 10;
+            }
+            
+            .yearly-summary-table td:first-child {
+                border-right: 1px solid #e5e7eb;
+                font-weight: 600;
             }
         }
 
@@ -1227,6 +1296,24 @@
         }
 
         /* Landscape mode adjustments */
+        @media screen and (orientation: landscape) {
+            .dashboard {
+                height: 100vh;
+                height: 100dvh;
+            }
+            
+            .main-content {
+                height: calc(100vh - 60px);
+                height: calc(100dvh - 60px);
+                overflow-y: auto;
+            }
+            
+            .sidebar {
+                height: 100vh;
+                height: 100dvh;
+            }
+        }
+        
         @media screen and (max-height: 500px) and (orientation: landscape) {
             .modal-content {
                 max-height: 90vh;
@@ -1237,6 +1324,15 @@
                 height: 50px;
                 min-height: 50px;
                 max-height: 50px;
+            }
+            
+            .stat-cards {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+            }
+            
+            .stat-card {
+                min-width: 150px;
             }
         }
 
@@ -1445,7 +1541,7 @@
             background: #fce7f3;
             font-weight: bold;
             border: 2px solid #ec4899;
-            padding: 8px;
+            padding: 0;
         }
         
         .weekly-total-content {
@@ -1453,6 +1549,8 @@
             align-items: center;
             gap: 10px;
             font-size: 10px;
+            background: #fef9c3;
+            padding: 8px;
         }
         
         .weekly-label {
@@ -1465,10 +1563,31 @@
             white-space: nowrap;
         }
         
+        .week-date-range {
+            font-size: 10px;
+            color: #7c2d12;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .week-end-day-selector {
+            font-size: 8px;
+            padding: 0px 1px;
+            height: 12px;
+            line-height: 12px;
+            border: 1px solid #d1d5db;
+            background: #f3f4f6;
+            border-radius: 2px;
+            margin-left: 5px;
+            min-width: auto;
+            width: 20px;
+        }
+        
         .weekly-total-header {
             display: flex;
             align-items: center;
             gap: 5px;
+            width: 100%;
         }
         
         .weekly-total-header select,
@@ -1481,12 +1600,15 @@
             background: white;
         }
         
-        .weekly-total-header select {
-            min-width: 100px;
+        .week-prefecture {
+            min-width: 60px;
+            max-width: 80px;
         }
         
-        .weekly-total-header input {
-            min-width: 80px;
+        .week-store {
+            min-width: 120px;
+            flex: 1;
+            max-width: 200px;
         }
         
         .weekly-total-metrics {
@@ -1623,6 +1745,17 @@
 
         .modal-btn.cancel:hover {
             background: #4b5563;
+        }
+
+        /* Scroll indicator animations */
+        @keyframes slideLeft {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-5px); }
+        }
+        
+        @keyframes slideRight {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(5px); }
         }
 
         .message {
@@ -1798,7 +1931,7 @@
                 <div class="stat-value" id="contractsTotal">0件</div>
             </div>
             <div class="stat-card">
-                <h3>成約率</h3>
+                <h3>買取率</h3>
                 <div class="stat-value" id="conversionRate">0%</div>
             </div>
         </div>
@@ -2448,9 +2581,18 @@
                 deposits: 0
             };
             
-            // Always create exactly 6 weeks for consistent layout
-            for (let week = 0; week < 6; week++) {
+            // Calculate the number of weeks needed
+            const totalCells = startDay + daysInMonth;
+            const weeksNeeded = Math.ceil(totalCells / 7);
+            
+            // Create only the necessary number of weeks
+            for (let week = 0; week < weeksNeeded; week++) {
                 const row = tbody.insertRow();
+                
+                // Track week dates for display
+                let weekStartDate = null;
+                let weekEndDate = null;
+                let weekDates = [];
                 
                 // Weekly totals for this row
                 let weeklyTotals = {
@@ -2469,21 +2611,40 @@
                     
                     if (week === 0 && day < startDay) {
                         // Previous month dates
+                        const prevMonthDay = daysInPrevMonth - startDay + day + 1;
                         dayDiv.className = 'day-number';
-                        dayDiv.textContent = daysInPrevMonth - startDay + day + 1;
+                        dayDiv.textContent = prevMonthDay;
                         cell.className = 'other-month';
+                        // Calculate correct month and year for previous month
+                        const prevMonth = month === 1 ? 12 : month - 1;
+                        const prevYear = month === 1 ? year - 1 : year;
+                        const prevDateStr = `${prevYear}-${prevMonth.toString().padStart(2, '0')}-${prevMonthDay.toString().padStart(2, '0')}`;
+                        cell.onclick = () => openModal(prevDateStr, prevMonthDay, prevMonth, prevYear);
                     } else if (date > daysInMonth) {
                         // Next month dates
+                        const nextDay = nextMonthDate++;
                         dayDiv.className = 'day-number';
-                        dayDiv.textContent = nextMonthDate++;
+                        dayDiv.textContent = nextDay;
                         cell.className = 'other-month';
+                        // Calculate correct month and year for next month
+                        const nextMonth = month === 12 ? 1 : month + 1;
+                        const nextYear = month === 12 ? year + 1 : year;
+                        const nextDateStr = `${nextYear}-${nextMonth.toString().padStart(2, '0')}-${nextDay.toString().padStart(2, '0')}`;
+                        cell.onclick = () => openModal(nextDateStr, nextDay, nextMonth, nextYear);
                     } else {
                         // Current month dates
-                        const currentDate = new Date(year, month - 1, date);
-                        const dateStr = `${year}-${month.toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`;
+                        const currentDay = date;  // Capture current date value
+                        const currentDate = new Date(year, month - 1, currentDay);
+                        const dateStr = `${year}-${month.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')}`;
+                        
+                        // Track week dates
+                        if (day === 1) weekStartDate = `${month}/${currentDay}`;  // Monday
+                        if (day === 5 || day === 6) {
+                            weekDates.push({day: day, date: `${month}/${currentDay}`});
+                        }
                         
                         dayDiv.className = 'day-number';
-                        dayDiv.textContent = date;
+                        dayDiv.textContent = currentDay;
                         
                         // Add day of week classes
                         if (day === 0) cell.className = 'sunday';
@@ -2587,12 +2748,13 @@
                         cell.appendChild(dayDiv);
                         cell.appendChild(contentDiv);
                         
-                        // Add click event
-                        cell.onclick = () => openModal(dateStr, date, month, year);
+                        // Add click event (use currentDay instead of date)
+                        cell.onclick = () => openModal(dateStr, currentDay, month, year);
                         
                         date++;
                     }
                     
+                    // Ensure day div is always appended for all cells
                     if (!cell.contains(dayDiv)) {
                         cell.appendChild(dayDiv);
                     }
@@ -2606,7 +2768,7 @@
                 const weekId = `week-${year}-${month}-${week}`;
                 const weekData = getWeekData(weekId);
                 
-                // Always create week total cell for all 6 weeks
+                // Create week total cell for each week
                 if (true) {
                     const operatingProfit = weeklyTotals.profit - weeklyTotals.expenses;
                     const prefectures = [
@@ -2625,9 +2787,23 @@
                         prefectureOptions += `<option value="${pref}" ${selected}>${pref}</option>`;
                     });
                     
+                    // Determine week end date based on saved preference or default to Saturday
+                    const usesFriday = weekData.usesFriday || false;
+                    let weekEndDate = weekStartDate ? (weekDates.length > 0 ? 
+                        (usesFriday && weekDates[0] ? weekDates[0].date : 
+                        weekDates[1] ? weekDates[1].date : weekDates[0]?.date || '') : '') : '';
+                    
+                    const dateRangeText = weekStartDate && weekEndDate ? 
+                        `${weekStartDate}～${weekEndDate}` : '';
+                    
                     weekTotalCell.innerHTML = `
                         <div class="weekly-total-content">
                             <span class="weekly-label">週計</span>
+                            <span class="week-date-range">${dateRangeText}</span>
+                            <select class="week-end-day-selector" data-week="${weekId}">
+                                <option value="saturday" ${!usesFriday ? 'selected' : ''}>土</option>
+                                <option value="friday" ${usesFriday ? 'selected' : ''}>金</option>
+                            </select>
                             <div class="weekly-total-header">
                                 <select class="week-prefecture" data-week="${weekId}">
                                     ${prefectureOptions}
@@ -2651,6 +2827,7 @@
                     setTimeout(() => {
                         const prefectureSelect = weekTotalCell.querySelector('.week-prefecture');
                         const storeInput = weekTotalCell.querySelector('.week-store');
+                        const endDaySelector = weekTotalCell.querySelector('.week-end-day-selector');
                         
                         if (prefectureSelect) {
                             prefectureSelect.addEventListener('change', function() {
@@ -2663,6 +2840,13 @@
                             storeInput.addEventListener('change', function() {
                                 saveWeekData(this.dataset.week, 'store', this.value);
                                 showAutoSaveIndicator();
+                            });
+                        }
+                        
+                        if (endDaySelector) {
+                            endDaySelector.addEventListener('change', function() {
+                                saveWeekData(this.dataset.week, 'usesFriday', this.value === 'friday');
+                                updateCalendar();
                             });
                         }
                     }, 100);
@@ -2977,7 +3161,8 @@
                 }
             }
             
-            const conversionRate = visitorsTotal > 0 ? Math.round((contractsTotal / visitorsTotal) * 100) : 0;
+            // 買取率 = (買取額 / 売上) * 100
+            const conversionRate = salesTotal > 0 ? Math.round((purchaseTotal / salesTotal) * 100) : 0;
             const operatingProfit = profitTotal - expensesTotal;
             
             document.getElementById('monthTotal').textContent = `¥${salesTotal.toLocaleString()}`;
@@ -3190,7 +3375,8 @@
                 }
                 
                 monthData.operatingProfit = monthData.profit - monthData.expenses;
-                monthData.conversionRate = monthData.visitors > 0 ? Math.round((monthData.contracts / monthData.visitors) * 100) : 0;
+                // 月次買取率 = (買取額 / 売上) * 100
+                monthData.conversionRate = monthData.sales > 0 ? Math.round((monthData.purchase / monthData.sales) * 100) : 0;
                 monthData.purchaseRate = monthData.sales > 0 ? Math.round((monthData.purchase / monthData.sales) * 100) : 0;
                 
                 monthlyData.push(monthData);
@@ -3205,7 +3391,8 @@
             }
             
             yearlyTotals.operatingProfit = yearlyTotals.profit - yearlyTotals.expenses;
-            yearlyTotals.conversionRate = yearlyTotals.visitors > 0 ? Math.round((yearlyTotals.contracts / yearlyTotals.visitors) * 100) : 0;
+            // 年間買取率 = (年間買取額 / 年間売上) * 100
+            yearlyTotals.conversionRate = yearlyTotals.sales > 0 ? Math.round((yearlyTotals.purchase / yearlyTotals.sales) * 100) : 0;
             yearlyTotals.purchaseRate = yearlyTotals.sales > 0 ? Math.round((yearlyTotals.purchase / yearlyTotals.sales) * 100) : 0;
             
             // Generate HTML
@@ -3216,6 +3403,7 @@
                         年間営業利益: ¥${yearlyTotals.operatingProfit.toLocaleString()}
                     </div>
                 </div>
+                <div class="yearly-summary-container">
                 <table class="yearly-summary-table">
                     <thead>
                         <tr>
@@ -3228,7 +3416,6 @@
                             <th>営業利益</th>
                             <th>来店数</th>
                             <th>成約数</th>
-                            <th>成約率</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -3247,7 +3434,6 @@
                         <td class="${profitClass}">¥${data.operatingProfit.toLocaleString()}</td>
                         <td>${data.visitors}人</td>
                         <td>${data.contracts}件</td>
-                        <td>${data.conversionRate}%</td>
                     </tr>
                 `;
             });
@@ -3264,10 +3450,15 @@
                         <td class="${yearlyProfitClass}">¥${yearlyTotals.operatingProfit.toLocaleString()}</td>
                         <td>${yearlyTotals.visitors}人</td>
                         <td>${yearlyTotals.contracts}件</td>
-                        <td>${yearlyTotals.conversionRate}%</td>
                     </tr>
                 </tbody>
                 </table>
+                </div>
+                <div style="text-align: center; margin-top: 10px; padding: 8px; background: linear-gradient(90deg, #fef3c7, #fed7aa, #fef3c7); border-radius: 6px; color: #92400e; font-size: 13px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <span style="animation: slideLeft 1.5s ease-in-out infinite;">←</span>
+                    <span>左右にスクロールできます</span>
+                    <span style="animation: slideRight 1.5s ease-in-out infinite;">→</span>
+                </div>
                 
                 <div style="margin-top: 20px; padding: 15px; background: #f9fafb; border-radius: 8px;">
                     <h4 style="margin-bottom: 10px;">年間サマリー</h4>
@@ -3285,7 +3476,6 @@
                         <div style="color: ${yearlyTotals.purchaseRate > 70 ? '#dc2626' : yearlyTotals.purchaseRate > 50 ? '#f59e0b' : '#059669'}; font-weight: bold;">
                             年間買取率: ${yearlyTotals.purchaseRate}%
                         </div>
-                        <div>年間成約率: ${yearlyTotals.conversionRate}%</div>
                     </div>
                 </div>
             `;
@@ -3884,6 +4074,25 @@
             
             // Initialize deposit display
             updateDepositDisplay();
+            
+            // Handle orientation change
+            window.addEventListener('orientationchange', function() {
+                setTimeout(function() {
+                    updateCalendar();
+                    window.scrollTo(0, 0);
+                }, 300);
+            });
+            
+            // Support for iOS screen rotation
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > window.innerHeight) {
+                    // Landscape mode
+                    document.body.classList.add('landscape');
+                } else {
+                    // Portrait mode
+                    document.body.classList.remove('landscape');
+                }
+            });
         };
     </script>
 </body>
