@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="mobile-web-app-capable" content="yes">
@@ -316,10 +316,17 @@
             background: #5a67d8;
         }
 
+        .yearly-summary-container {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 20px;
+        }
+
         .yearly-summary-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            min-width: 700px;
         }
 
         .yearly-summary-table th {
@@ -1051,14 +1058,22 @@
                 width: 100%;
             }
 
+            .yearly-summary-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
             .yearly-summary-table {
-                font-size: 10px;
+                font-size: 9px;
+                min-width: 600px;
+                display: table;
             }
 
             .yearly-summary-table th,
             .yearly-summary-table td {
-                padding: 5px;
-                font-size: 10px;
+                padding: 4px 3px;
+                font-size: 9px;
+                white-space: nowrap;
             }
         }
 
@@ -1227,6 +1242,24 @@
         }
 
         /* Landscape mode adjustments */
+        @media screen and (orientation: landscape) {
+            .dashboard {
+                height: 100vh;
+                height: 100dvh;
+            }
+            
+            .main-content {
+                height: calc(100vh - 60px);
+                height: calc(100dvh - 60px);
+                overflow-y: auto;
+            }
+            
+            .sidebar {
+                height: 100vh;
+                height: 100dvh;
+            }
+        }
+        
         @media screen and (max-height: 500px) and (orientation: landscape) {
             .modal-content {
                 max-height: 90vh;
@@ -1237,6 +1270,15 @@
                 height: 50px;
                 min-height: 50px;
                 max-height: 50px;
+            }
+            
+            .stat-cards {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+            }
+            
+            .stat-card {
+                min-width: 150px;
             }
         }
 
@@ -3237,6 +3279,7 @@
                         年間営業利益: ¥${yearlyTotals.operatingProfit.toLocaleString()}
                     </div>
                 </div>
+                <div class="yearly-summary-container">
                 <table class="yearly-summary-table">
                     <thead>
                         <tr>
@@ -3286,6 +3329,7 @@
                     </tr>
                 </tbody>
                 </table>
+                </div>
                 
                 <div style="margin-top: 20px; padding: 15px; background: #f9fafb; border-radius: 8px;">
                     <h4 style="margin-bottom: 10px;">年間サマリー</h4>
@@ -3901,6 +3945,25 @@
             
             // Initialize deposit display
             updateDepositDisplay();
+            
+            // Handle orientation change
+            window.addEventListener('orientationchange', function() {
+                setTimeout(function() {
+                    updateCalendar();
+                    window.scrollTo(0, 0);
+                }, 300);
+            });
+            
+            // Support for iOS screen rotation
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > window.innerHeight) {
+                    // Landscape mode
+                    document.body.classList.add('landscape');
+                } else {
+                    // Portrait mode
+                    document.body.classList.remove('landscape');
+                }
+            });
         };
     </script>
 </body>
