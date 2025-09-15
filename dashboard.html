@@ -2448,8 +2448,12 @@
                 deposits: 0
             };
             
-            // Always create exactly 6 weeks for consistent layout
-            for (let week = 0; week < 6; week++) {
+            // Calculate the number of weeks needed
+            const totalCells = startDay + daysInMonth;
+            const weeksNeeded = Math.ceil(totalCells / 7);
+            
+            // Create only the necessary number of weeks
+            for (let week = 0; week < weeksNeeded; week++) {
                 const row = tbody.insertRow();
                 
                 // Weekly totals for this row
@@ -2620,7 +2624,7 @@
                 const weekId = `week-${year}-${month}-${week}`;
                 const weekData = getWeekData(weekId);
                 
-                // Always create week total cell for all 6 weeks
+                // Create week total cell for each week
                 if (true) {
                     const operatingProfit = weeklyTotals.profit - weeklyTotals.expenses;
                     const prefectures = [
