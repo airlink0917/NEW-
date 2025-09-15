@@ -325,8 +325,10 @@
 
         .yearly-summary-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             min-width: 700px;
+            position: relative;
         }
 
         .yearly-summary-table th {
@@ -335,12 +337,42 @@
             padding: 10px;
             text-align: left;
             font-size: 12px;
+            position: relative;
+        }
+        
+        /* Sticky first column (month) */
+        .yearly-summary-table th:first-child,
+        .yearly-summary-table td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            background: inherit;
+        }
+        
+        .yearly-summary-table th:first-child {
+            background: #667eea;
+            z-index: 11;
+        }
+        
+        .yearly-summary-table td:first-child {
+            background: white;
+            border-right: 2px solid #e5e7eb;
+            box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .yearly-summary-table tr:hover td:first-child {
+            background: #f9fafb;
+        }
+        
+        .yearly-total-row td:first-child {
+            background: #f3f4f6 !important;
         }
 
         .yearly-summary-table td {
             padding: 8px;
             border-bottom: 1px solid #e5e7eb;
             font-size: 12px;
+            background: white;
         }
 
         .yearly-summary-table tr:hover {
@@ -1074,6 +1106,20 @@
                 padding: 4px 3px;
                 font-size: 9px;
                 white-space: nowrap;
+            }
+            
+            /* Ensure sticky column works on mobile */
+            .yearly-summary-table th:first-child,
+            .yearly-summary-table td:first-child {
+                position: -webkit-sticky;
+                position: sticky;
+                left: 0;
+                z-index: 10;
+            }
+            
+            .yearly-summary-table td:first-child {
+                border-right: 1px solid #e5e7eb;
+                font-weight: 600;
             }
         }
 
