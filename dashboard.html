@@ -1571,13 +1571,16 @@
         }
         
         .week-end-day-selector {
-            font-size: 9px;
-            padding: 1px 3px;
-            height: 18px;
+            font-size: 10px;
+            padding: 0px 2px;
+            height: 14px;
+            line-height: 14px;
             border: 1px solid #ec4899;
             background: white;
-            border-radius: 3px;
+            border-radius: 2px;
             margin-left: 5px;
+            min-width: auto;
+            width: 28px;
         }
         
         .weekly-total-header {
@@ -2798,8 +2801,8 @@
                             <span class="weekly-label">週計</span>
                             <span class="week-date-range">${dateRangeText}</span>
                             <select class="week-end-day-selector" data-week="${weekId}">
-                                <option value="saturday" ${!usesFriday ? 'selected' : ''}>土曜</option>
-                                <option value="friday" ${usesFriday ? 'selected' : ''}>金曜</option>
+                                <option value="saturday" ${!usesFriday ? 'selected' : ''}>土</option>
+                                <option value="friday" ${usesFriday ? 'selected' : ''}>金</option>
                             </select>
                             <div class="weekly-total-header">
                                 <select class="week-prefecture" data-week="${weekId}">
