@@ -2619,6 +2619,13 @@
                         const prevMonth = month === 1 ? 12 : month - 1;
                         const prevYear = month === 1 ? year - 1 : year;
                         const prevDateStr = `${prevYear}-${prevMonth.toString().padStart(2, '0')}-${prevMonthDay.toString().padStart(2, '0')}`;
+
+                        // Track week dates for previous month days
+                        if (day === 1) weekStartDate = `${prevMonth}/${prevMonthDay}`;  // Monday
+                        if (day === 5 || day === 6) {
+                            weekDates.push({day: day, date: `${prevMonth}/${prevMonthDay}`});
+                        }
+
                         cell.onclick = () => openModal(prevDateStr, prevMonthDay, prevMonth, prevYear);
                     } else if (date > daysInMonth) {
                         // Next month dates
@@ -2630,6 +2637,13 @@
                         const nextMonth = month === 12 ? 1 : month + 1;
                         const nextYear = month === 12 ? year + 1 : year;
                         const nextDateStr = `${nextYear}-${nextMonth.toString().padStart(2, '0')}-${nextDay.toString().padStart(2, '0')}`;
+
+                        // Track week dates for next month days
+                        if (day === 1 && !weekStartDate) weekStartDate = `${nextMonth}/${nextDay}`;  // Monday
+                        if (day === 5 || day === 6) {
+                            weekDates.push({day: day, date: `${nextMonth}/${nextDay}`});
+                        }
+
                         cell.onclick = () => openModal(nextDateStr, nextDay, nextMonth, nextYear);
                     } else {
                         // Current month dates
@@ -2638,7 +2652,7 @@
                         const dateStr = `${year}-${month.toString().padStart(2, '0')}-${currentDay.toString().padStart(2, '0')}`;
                         
                         // Track week dates
-                        if (day === 1) weekStartDate = `${month}/${currentDay}`;  // Monday
+                        if (day === 1 && !weekStartDate) weekStartDate = `${month}/${currentDay}`;  // Monday
                         if (day === 5 || day === 6) {
                             weekDates.push({day: day, date: `${month}/${currentDay}`});
                         }
