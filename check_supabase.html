@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabaseデータ確認</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Supabaseデータベース状態確認</h1>
+    <div id="status"></div>
+    <h2>テーブル情報：</h2>
+    <div id="table-info"></div>
+    <h2>データ：</h2>
+    <div id="data"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://qddyqqmpqqkkbibplsmn.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkZHlxcW1wcXFra2JpYnBsc21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NTc5MTgsImV4cCI6MjA3MzIzMzkxOH0.KAgZ8D5cRgdPS-AoIeG7bwFiNzbGV8TW22rhGLft6sY';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const statusDiv = document.getElementById('status');
+        const tableDiv = document.getElementById('table-info');
+        const dataDiv = document.getElementById('data');
+
+        async function checkDatabase() {
+            statusDiv.innerHTML = '<p>接続確認中...</p>';
+
+            try {
+                // テーブル存在確認
+                const { data: tables, error: tablesError } = await supabase
+                    .from('sales_data')
+                    .select('*')
+                    .limit(1);
+
+                if (tablesError) {
+                    if (tablesError.code === '42P01') {
+                        statusDiv.innerHTML = '<p style="color: red;">❌ テーブル "sales_data" が存在しません</p>';
+                        tableDiv.innerHTML = `
+                            <p>テーブルを作成する必要があります。以下のSQLをSupabase SQL Editorで実行してください：</p>
+                            <pre style="background: #f5f5f5; padding: 10px; border-radius: 5px;">
+CREATE TABLE sales_data (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    data_type VARCHAR(50) NOT NULL,
+    data JSONB NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id, data_type)
+);
+
+-- インデックスの作成
+CREATE INDEX idx_sales_data_user_id ON sales_data(user_id);
+CREATE INDEX idx_sales_data_data_type ON sales_data(data_type);
+CREATE INDEX idx_sales_data_updated_at ON sales_data(updated_at);</pre>
+                        `;
+                        return;
+                    } else {
+                        statusDiv.innerHTML = `<p style="color: orange;">⚠️ エラー: ${tablesError.message}</p>`;
+                    }
+                } else {
+                    statusDiv.innerHTML = '<p style="color: green;">✅ Supabase接続成功</p>';
+                    tableDiv.innerHTML = '<p style="color: green;">✅ テーブル "sales_data" が存在します</p>';
+                }
+
+                // 全データ取得
+                const { data: allData, error: dataError } = await supabase
+                    .from('sales_data')
+                    .select('*')
+                    .order('updated_at', { ascending: false });
+
+                if (dataError) {
+                    dataDiv.innerHTML = `<p style="color: red;">データ取得エラー: ${dataError.message}</p>`;
+                } else if (!allData || allData.length === 0) {
+                    dataDiv.innerHTML = '<p style="color: orange;">データがありません</p>';
+                } else {
+                    let html = `<p>データ件数: ${allData.length}件</p>`;
+                    html += '<table border="1" style="border-collapse: collapse; width: 100%;">';
+                    html += '<tr><th>User ID</th><th>Data Type</th><th>Updated At</th><th>Data (一部)</th></tr>';
+
+                    allData.forEach(row => {
+                        const dataPreview = JSON.stringify(row.data).substring(0, 100) + '...';
+                        html += `<tr>
+                            <td>${row.user_id}</td>
+                            <td>${row.data_type}</td>
+                            <td>${new Date(row.updated_at).toLocaleString('ja-JP')}</td>
+                            <td>${dataPreview}</td>
+                        </tr>`;
+                    });
+                    html += '</table>';
+                    dataDiv.innerHTML = html;
+                }
+
+            } catch (error) {
+                statusDiv.innerHTML = `<p style="color: red;">エラー: ${error.message}</p>`;
+            }
+        }
+
+        // ページ読み込み時に実行
+        checkDatabase();
+    </script>
+</body>
+</html>

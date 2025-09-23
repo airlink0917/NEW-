@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>バックアップ管理 - 売上カレンダー</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            background: #f8f9fa;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        button {
+            padding: 12px 24px;
+            margin: 5px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        button.success {
+            background: #48bb78;
+        }
+        button.danger {
+            background: #f56565;
+        }
+        button.warning {
+            background: #ed8936;
+        }
+        .status-box {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .backup-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .backup-info {
+            flex: 1;
+        }
+        .backup-actions {
+            display: flex;
+            gap: 10px;
+        }
+        pre {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .success { color: #22c55e; font-weight: bold; }
+        .error { color: #ef4444; font-weight: bold; }
+        .warning { color: #f59e0b; font-weight: bold; }
+        .info { color: #3b82f6; font-weight: bold; }
+        .file-input {
+            display: none;
+        }
+        .file-label {
+            padding: 12px 24px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-block;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .file-label:hover {
+            background: #2563eb;
+        }
+        .auto-backup-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #e0e7ff;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ef4444;
+        }
+        .indicator.active {
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💾 バックアップ管理センター</h1>
+
+        <!-- 自動バックアップ設定 -->
+        <div class="section">
+            <h2>🔄 自動バックアップ設定</h2>
+            <div class="auto-backup-status">
+                <span class="indicator" id="autoBackupIndicator"></span>
+                <span id="autoBackupStatus">自動バックアップ: 停止中</span>
+            </div>
+            <div class="status-box">
+                <p><strong>バックアップ間隔:</strong></p>
+                <select id="backupInterval" style="padding: 8px; font-size: 14px; border-radius: 5px;">
+                    <option value="0">無効</option>
+                    <option value="3600000">1時間ごと</option>
+                    <option value="21600000">6時間ごと</option>
+                    <option value="43200000">12時間ごと</option>
+                    <option value="86400000" selected>24時間ごと（推奨）</option>
+                    <option value="604800000">週1回</option>
+                </select>
+                <button onclick="updateAutoBackup()" style="margin-left: 10px;">設定を保存</button>
+            </div>
+            <div class="status-box">
+                <p class="info">次回バックアップ: <span id="nextBackup">-</span></p>
+                <p class="info">最後のバックアップ: <span id="lastAutoBackup">-</span></p>
+            </div>
+        </div>
+
+        <!-- 手動バックアップ -->
+        <div class="section">
+            <h2>💼 手動バックアップ</h2>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button onclick="createBackup()" class="success">今すぐバックアップ作成</button>
+                <button onclick="downloadBackup()">PCにダウンロード</button>
+                <button onclick="emailBackup()" class="warning">メールで送信（準備中）</button>
+            </div>
+            <div id="manualBackupStatus" class="status-box" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- バックアップ履歴 -->
+        <div class="section">
+            <h2>📚 バックアップ履歴</h2>
+            <button onclick="loadBackupHistory()">履歴を更新</button>
+            <div id="backupHistory" style="margin-top: 15px;">
+                <p style="color: #999;">バックアップ履歴を読み込み中...</p>
+            </div>
+        </div>
+
+        <!-- データ復元 -->
+        <div class="section">
+            <h2>🔧 データ復元</h2>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <label for="fileInput" class="file-label">ファイルから復元</label>
+                <input type="file" id="fileInput" class="file-input" accept=".json" onchange="restoreFromFile(event)">
+                <button onclick="restoreFromSupabase()" class="warning">Supabaseから最新データを復元</button>
+                <button onclick="restoreFromLocalStorage()">ローカルストレージから復元</button>
+            </div>
+            <div id="restoreStatus" class="status-box" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- バックアップ内容プレビュー -->
+        <div class="section">
+            <h2>👁️ 現在のデータプレビュー</h2>
+            <button onclick="previewCurrentData()">データを表示</button>
+            <div id="dataPreview" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- 使い方 -->
+        <div class="section">
+            <h2>📖 バックアップの使い方</h2>
+            <div class="status-box">
+                <h3>自動バックアップ</h3>
+                <ul>
+                    <li>設定した間隔で自動的にデータをバックアップ</li>
+                    <li>ブラウザのローカルストレージとSupabaseの両方に保存</li>
+                    <li>最大10件の履歴を保持</li>
+                </ul>
+
+                <h3>手動バックアップ</h3>
+                <ul>
+                    <li><strong>今すぐバックアップ作成</strong>: 現在のデータを即座に保存</li>
+                    <li><strong>PCにダウンロード</strong>: JSONファイルとしてPCに保存</li>
+                    <li><strong>メールで送信</strong>: バックアップファイルをメールで送信（今後実装予定）</li>
+                </ul>
+
+                <h3>データ復元</h3>
+                <ul>
+                    <li><strong>ファイルから復元</strong>: PCに保存したJSONファイルから復元</li>
+                    <li><strong>Supabaseから復元</strong>: クラウドの最新データを取得</li>
+                    <li><strong>履歴から復元</strong>: 過去のバックアップから選択して復元</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase設定
+        const SUPABASE_URL = 'https://qddyqqmpqqkkbibplsmn.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkZHlxcW1wcXFra2JpYnBsc21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NTc5MTgsImV4cCI6MjA3MzIzMzkxOH0.KAgZ8D5cRgdPS-AoIeG7bwFiNzbGV8TW22rhGLft6sY';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let autoBackupTimer = null;
+
+        // ページ読み込み時の初期化
+        window.onload = function() {
+            loadBackupSettings();
+            loadBackupHistory();
+            checkAutoBackupStatus();
+        };
+
+        // バックアップ設定の読み込み
+        function loadBackupSettings() {
+            const settings = localStorage.getItem('backupSettings');
+            if (settings) {
+                const parsed = JSON.parse(settings);
+                document.getElementById('backupInterval').value = parsed.interval || '0';
+                if (parsed.interval && parsed.interval !== '0') {
+                    startAutoBackup(parseInt(parsed.interval));
+                }
+            }
+        }
+
+        // 自動バックアップの設定更新
+        function updateAutoBackup() {
+            const interval = document.getElementById('backupInterval').value;
+            const settings = {
+                interval: interval,
+                lastBackup: localStorage.getItem('lastAutoBackup') || null
+            };
+            localStorage.setItem('backupSettings', JSON.stringify(settings));
+
+            if (interval === '0') {
+                stopAutoBackup();
+                alert('自動バックアップを無効にしました');
+            } else {
+                startAutoBackup(parseInt(interval));
+                alert(`自動バックアップを設定しました（${getIntervalText(interval)}）`);
+            }
+        }
+
+        // 自動バックアップ開始
+        function startAutoBackup(interval) {
+            stopAutoBackup(); // 既存のタイマーをクリア
+
+            // 即座に最初のバックアップ
+            createBackup(true);
+
+            // 定期バックアップを設定
+            autoBackupTimer = setInterval(() => {
+                createBackup(true);
+            }, interval);
+
+            // UIを更新
+            document.getElementById('autoBackupIndicator').classList.add('active');
+            document.getElementById('autoBackupStatus').textContent = `自動バックアップ: 有効（${getIntervalText(interval.toString())}）`;
+
+            // 次回バックアップ時刻を表示
+            const nextTime = new Date(Date.now() + interval);
+            document.getElementById('nextBackup').textContent = nextTime.toLocaleString('ja-JP');
+        }
+
+        // 自動バックアップ停止
+        function stopAutoBackup() {
+            if (autoBackupTimer) {
+                clearInterval(autoBackupTimer);
+                autoBackupTimer = null;
+            }
+            document.getElementById('autoBackupIndicator').classList.remove('active');
+            document.getElementById('autoBackupStatus').textContent = '自動バックアップ: 停止中';
+            document.getElementById('nextBackup').textContent = '-';
+        }
+
+        // 間隔のテキスト変換
+        function getIntervalText(interval) {
+            const intervals = {
+                '3600000': '1時間ごと',
+                '21600000': '6時間ごと',
+                '43200000': '12時間ごと',
+                '86400000': '24時間ごと',
+                '604800000': '週1回'
+            };
+            return intervals[interval] || '不明';
+        }
+
+        // バックアップ作成
+        async function createBackup(isAuto = false) {
+            const statusDiv = isAuto ? null : document.getElementById('manualBackupStatus');
+            if (statusDiv) statusDiv.innerHTML = '<p class="info">バックアップ作成中...</p>';
+
+            try {
+                // 全データを収集
+                const backupData = {
+                    version: '1.0',
+                    timestamp: new Date().toISOString(),
+                    type: isAuto ? 'auto' : 'manual',
+                    data: {
+                        calendar: localStorage.getItem('calendarData') ? JSON.parse(localStorage.getItem('calendarData')) : {},
+                        weekly: localStorage.getItem('weeklyData') ? JSON.parse(localStorage.getItem('weeklyData')) : {},
+                        deposit: localStorage.getItem('depositData') ? JSON.parse(localStorage.getItem('depositData')) : [],
+                        withdraw: localStorage.getItem('withdrawData') ? JSON.parse(localStorage.getItem('withdrawData')) : []
+                    }
+                };
+
+                // Supabaseに保存
+                const { error } = await supabase
+                    .from('sales_data')
+                    .upsert({
+                        user_id: 'shared_user_2024',
+                        data_type: `backup_${Date.now()}`,
+                        data: JSON.stringify(backupData),
+                        updated_at: backupData.timestamp
+                    });
+
+                if (error) throw error;
+
+                // ローカルストレージにも保存（履歴として）
+                const backupHistory = JSON.parse(localStorage.getItem('backupHistory') || '[]');
+                backupHistory.unshift({
+                    id: `backup_${Date.now()}`,
+                    timestamp: backupData.timestamp,
+                    type: backupData.type,
+                    size: JSON.stringify(backupData).length
+                });
+
+                // 最大10件まで保持
+                if (backupHistory.length > 10) {
+                    backupHistory.pop();
+                }
+
+                localStorage.setItem('backupHistory', JSON.stringify(backupHistory));
+                localStorage.setItem('lastBackup', JSON.stringify(backupData));
+
+                if (isAuto) {
+                    localStorage.setItem('lastAutoBackup', backupData.timestamp);
+                    document.getElementById('lastAutoBackup').textContent = new Date(backupData.timestamp).toLocaleString('ja-JP');
+                } else {
+                    statusDiv.innerHTML = `
+                        <p class="success">✅ バックアップ作成成功！</p>
+                        <p>作成日時: ${new Date(backupData.timestamp).toLocaleString('ja-JP')}</p>
+                        <p>サイズ: ${(JSON.stringify(backupData).length / 1024).toFixed(2)} KB</p>
+                    `;
+                }
+
+                loadBackupHistory();
+                return backupData;
+
+            } catch (error) {
+                if (statusDiv) {
+                    statusDiv.innerHTML = `<p class="error">❌ バックアップエラー: ${error.message}</p>`;
+                }
+                console.error('Backup error:', error);
+                return null;
+            }
+        }
+
+        // PCにダウンロード
+        async function downloadBackup() {
+            const backup = await createBackup();
+            if (!backup) return;
+
+            const dataStr = JSON.stringify(backup, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+            link.href = url;
+            link.download = `売上カレンダー_バックアップ_${timestamp}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+
+            document.getElementById('manualBackupStatus').innerHTML += '<p class="success">✅ ダウンロード完了</p>';
+        }
+
+        // ファイルから復元
+        function restoreFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const backup = JSON.parse(e.target.result);
+
+                    if (!backup.data) {
+                        throw new Error('無効なバックアップファイル');
+                    }
+
+                    if (confirm(`${new Date(backup.timestamp).toLocaleString('ja-JP')} のバックアップから復元しますか？\n\n現在のデータは上書きされます。`)) {
+                        // データを復元
+                        if (backup.data.calendar) localStorage.setItem('calendarData', JSON.stringify(backup.data.calendar));
+                        if (backup.data.weekly) localStorage.setItem('weeklyData', JSON.stringify(backup.data.weekly));
+                        if (backup.data.deposit) localStorage.setItem('depositData', JSON.stringify(backup.data.deposit));
+                        if (backup.data.withdraw) localStorage.setItem('withdrawData', JSON.stringify(backup.data.withdraw));
+
+                        document.getElementById('restoreStatus').innerHTML = `
+                            <p class="success">✅ 復元成功！</p>
+                            <p>復元元: ${new Date(backup.timestamp).toLocaleString('ja-JP')}</p>
+                            <p>ページを再読み込みして変更を確認してください。</p>
+                        `;
+
+                        // Supabaseにも保存
+                        saveRestoredDataToSupabase();
+                    }
+                } catch (error) {
+                    document.getElementById('restoreStatus').innerHTML = `<p class="error">❌ 復元エラー: ${error.message}</p>`;
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Supabaseから復元
+        async function restoreFromSupabase() {
+            const statusDiv = document.getElementById('restoreStatus');
+            statusDiv.innerHTML = '<p class="info">Supabaseから復元中...</p>';
+
+            try {
+                // 各データタイプを取得
+                const types = ['calendar', 'weekly', 'deposit', 'withdraw'];
+                let restored = 0;
+
+                for (const type of types) {
+                    const { data, error } = await supabase
+                        .from('sales_data')
+                        .select('*')
+                        .eq('user_id', 'shared_user_2024')
+                        .eq('data_type', type)
+                        .single();
+
+                    if (data) {
+                        localStorage.setItem(`${type}Data`, data.data);
+                        localStorage.setItem(`${type}DataUpdated`, data.updated_at);
+                        restored++;
+                    }
+                }
+
+                statusDiv.innerHTML = `
+                    <p class="success">✅ Supabaseから復元成功！</p>
+                    <p>${restored}件のデータを復元しました</p>
+                    <p>ページを再読み込みして変更を確認してください。</p>
+                `;
+
+            } catch (error) {
+                statusDiv.innerHTML = `<p class="error">❌ 復元エラー: ${error.message}</p>`;
+            }
+        }
+
+        // ローカルストレージから復元
+        function restoreFromLocalStorage() {
+            const lastBackup = localStorage.getItem('lastBackup');
+            if (!lastBackup) {
+                document.getElementById('restoreStatus').innerHTML = '<p class="warning">⚠️ ローカルバックアップが見つかりません</p>';
+                return;
+            }
+
+            try {
+                const backup = JSON.parse(lastBackup);
+
+                if (confirm(`${new Date(backup.timestamp).toLocaleString('ja-JP')} のローカルバックアップから復元しますか？`)) {
+                    if (backup.data.calendar) localStorage.setItem('calendarData', JSON.stringify(backup.data.calendar));
+                    if (backup.data.weekly) localStorage.setItem('weeklyData', JSON.stringify(backup.data.weekly));
+                    if (backup.data.deposit) localStorage.setItem('depositData', JSON.stringify(backup.data.deposit));
+                    if (backup.data.withdraw) localStorage.setItem('withdrawData', JSON.stringify(backup.data.withdraw));
+
+                    document.getElementById('restoreStatus').innerHTML = `
+                        <p class="success">✅ ローカルバックアップから復元成功！</p>
+                        <p>ページを再読み込みして変更を確認してください。</p>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('restoreStatus').innerHTML = `<p class="error">❌ 復元エラー: ${error.message}</p>`;
+            }
+        }
+
+        // 復元データをSupabaseに保存
+        async function saveRestoredDataToSupabase() {
+            const types = ['calendar', 'weekly', 'deposit', 'withdraw'];
+            for (const type of types) {
+                const data = localStorage.getItem(`${type}Data`);
+                if (data) {
+                    await supabase
+                        .from('sales_data')
+                        .upsert({
+                            user_id: 'shared_user_2024',
+                            data_type: type,
+                            data: data,
+                            updated_at: new Date().toISOString()
+                        }, {
+                            onConflict: 'user_id,data_type'
+                        });
+                }
+            }
+        }
+
+        // バックアップ履歴の読み込み
+        async function loadBackupHistory() {
+            const historyDiv = document.getElementById('backupHistory');
+            historyDiv.innerHTML = '<p style="color: #999;">履歴を読み込み中...</p>';
+
+            try {
+                // Supabaseからバックアップ履歴を取得
+                const { data, error } = await supabase
+                    .from('sales_data')
+                    .select('*')
+                    .eq('user_id', 'shared_user_2024')
+                    .like('data_type', 'backup_%')
+                    .order('updated_at', { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    historyDiv.innerHTML = '';
+                    data.forEach(backup => {
+                        const backupData = JSON.parse(backup.data);
+                        const div = document.createElement('div');
+                        div.className = 'backup-item';
+                        div.innerHTML = `
+                            <div class="backup-info">
+                                <p><strong>${backupData.type === 'auto' ? '🔄 自動' : '👤 手動'}バックアップ</strong></p>
+                                <p>作成日時: ${new Date(backupData.timestamp).toLocaleString('ja-JP')}</p>
+                                <p>サイズ: ${(JSON.stringify(backupData).length / 1024).toFixed(2)} KB</p>
+                            </div>
+                            <div class="backup-actions">
+                                <button onclick="restoreFromBackup('${backup.data_type}')" class="warning">復元</button>
+                                <button onclick="deleteBackup('${backup.data_type}')" class="danger">削除</button>
+                            </div>
+                        `;
+                        historyDiv.appendChild(div);
+                    });
+                } else {
+                    historyDiv.innerHTML = '<p style="color: #999;">バックアップ履歴がありません</p>';
+                }
+
+            } catch (error) {
+                historyDiv.innerHTML = `<p class="error">❌ 履歴読み込みエラー: ${error.message}</p>`;
+            }
+        }
+
+        // 特定のバックアップから復元
+        async function restoreFromBackup(backupId) {
+            if (!confirm('このバックアップから復元しますか？\n現在のデータは上書きされます。')) return;
+
+            try {
+                const { data, error } = await supabase
+                    .from('sales_data')
+                    .select('*')
+                    .eq('user_id', 'shared_user_2024')
+                    .eq('data_type', backupId)
+                    .single();
+
+                if (error) throw error;
+
+                const backup = JSON.parse(data.data);
+
+                // データを復元
+                if (backup.data.calendar) localStorage.setItem('calendarData', JSON.stringify(backup.data.calendar));
+                if (backup.data.weekly) localStorage.setItem('weeklyData', JSON.stringify(backup.data.weekly));
+                if (backup.data.deposit) localStorage.setItem('depositData', JSON.stringify(backup.data.deposit));
+                if (backup.data.withdraw) localStorage.setItem('withdrawData', JSON.stringify(backup.data.withdraw));
+
+                alert('復元成功！ページを再読み込みしてください。');
+                location.reload();
+
+            } catch (error) {
+                alert('復元エラー: ' + error.message);
+            }
+        }
+
+        // バックアップ削除
+        async function deleteBackup(backupId) {
+            if (!confirm('このバックアップを削除しますか？')) return;
+
+            try {
+                const { error } = await supabase
+                    .from('sales_data')
+                    .delete()
+                    .eq('user_id', 'shared_user_2024')
+                    .eq('data_type', backupId);
+
+                if (error) throw error;
+
+                loadBackupHistory();
+
+            } catch (error) {
+                alert('削除エラー: ' + error.message);
+            }
+        }
+
+        // 現在のデータプレビュー
+        function previewCurrentData() {
+            const previewDiv = document.getElementById('dataPreview');
+
+            const calendarData = localStorage.getItem('calendarData') ? JSON.parse(localStorage.getItem('calendarData')) : {};
+            const weeklyData = localStorage.getItem('weeklyData') ? JSON.parse(localStorage.getItem('weeklyData')) : {};
+            const depositData = localStorage.getItem('depositData') ? JSON.parse(localStorage.getItem('depositData')) : [];
+            const withdrawData = localStorage.getItem('withdrawData') ? JSON.parse(localStorage.getItem('withdrawData')) : [];
+
+            const preview = {
+                カレンダーデータ: Object.keys(calendarData).length + '件',
+                週計データ: Object.keys(weeklyData).length + '件',
+                入金データ: depositData.length + '件',
+                出金データ: withdrawData.length + '件',
+                最終更新: {
+                    カレンダー: localStorage.getItem('calendarDataUpdated') || '未更新',
+                    週計: localStorage.getItem('weeklyDataUpdated') || '未更新',
+                    入金: localStorage.getItem('depositDataUpdated') || '未更新',
+                    出金: localStorage.getItem('withdrawDataUpdated') || '未更新'
+                }
+            };
+
+            previewDiv.innerHTML = `<pre>${JSON.stringify(preview, null, 2)}</pre>`;
+        }
+
+        // 自動バックアップ状態の確認
+        function checkAutoBackupStatus() {
+            const lastAutoBackup = localStorage.getItem('lastAutoBackup');
+            if (lastAutoBackup) {
+                document.getElementById('lastAutoBackup').textContent = new Date(lastAutoBackup).toLocaleString('ja-JP');
+            }
+        }
+
+        // メールで送信（将来実装）
+        function emailBackup() {
+            alert('メール送信機能は今後実装予定です。\n現在はPCにダウンロードしてご利用ください。');
+        }
+    </script>
+</body>
+</html>

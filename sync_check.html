@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>売上カレンダー 同期確認ツール</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            background: #f8f9fa;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        button.success {
+            background: #48bb78;
+        }
+        button.danger {
+            background: #f56565;
+        }
+        .success {
+            color: #22c55e;
+            font-weight: bold;
+        }
+        .error {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .warning {
+            color: #f59e0b;
+            font-weight: bold;
+        }
+        .status-box {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        pre {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background: #f3f4f6;
+            font-weight: 600;
+        }
+        .sync-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .sync-active {
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+        .sync-inactive {
+            background: #ef4444;
+        }
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 売上カレンダー 同期確認ツール</h1>
+
+        <!-- 接続状態 -->
+        <div class="section">
+            <h2>1️⃣ 接続状態</h2>
+            <button onclick="checkConnection()">接続確認</button>
+            <div id="connectionStatus" class="status-box"></div>
+        </div>
+
+        <!-- データ同期テスト -->
+        <div class="section">
+            <h2>2️⃣ データ同期テスト</h2>
+            <button onclick="testDataSync()">同期テスト実行</button>
+            <button onclick="loadCurrentData()" class="success">現在のデータを確認</button>
+            <div id="syncTest" class="status-box"></div>
+        </div>
+
+        <!-- ユーザーID確認 -->
+        <div class="section">
+            <h2>3️⃣ ユーザーID設定</h2>
+            <button onclick="checkUserId()">ユーザーID確認</button>
+            <div id="userIdStatus" class="status-box"></div>
+        </div>
+
+        <!-- リアルタイム同期状態 -->
+        <div class="section">
+            <h2>4️⃣ リアルタイム同期</h2>
+            <button onclick="testRealtimeSync()">リアルタイム同期テスト</button>
+            <button onclick="clearTestData()" class="danger">テストデータ削除</button>
+            <div id="realtimeStatus" class="status-box"></div>
+        </div>
+
+        <!-- デバイス間同期確認 -->
+        <div class="section">
+            <h2>5️⃣ デバイス間同期確認手順</h2>
+            <div class="status-box">
+                <ol>
+                    <li><strong>このページを2つのデバイスで開く</strong></li>
+                    <li><strong>デバイス1で「同期テスト実行」をクリック</strong></li>
+                    <li><strong>デバイス2で「現在のデータを確認」をクリック</strong></li>
+                    <li><strong>同じデータが表示されれば同期成功！</strong></li>
+                </ol>
+                <p>現在のURL: <code>https://new-id68.vercel.app</code></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://qddyqqmpqqkkbibplsmn.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkZHlxcW1wcXFra2JpYnBsc21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NTc5MTgsImV4cCI6MjA3MzIzMzkxOH0.KAgZ8D5cRgdPS-AoIeG7bwFiNzbGV8TW22rhGLft6sY';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // 接続確認
+        async function checkConnection() {
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.innerHTML = '<p>接続確認中...</p>';
+
+            try {
+                const { data, error } = await supabase
+                    .from('sales_data')
+                    .select('count', { count: 'exact' });
+
+                if (error) {
+                    statusDiv.innerHTML = `
+                        <p class="error">❌ 接続エラー: ${error.message}</p>
+                        <p>エラーコード: ${error.code}</p>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `
+                        <p class="success">✅ Supabase接続成功</p>
+                        <p>プロジェクトID: qddyqqmpqqkkbibplsmn</p>
+                        <p>URL: ${SUPABASE_URL}</p>
+                        <div><span class="sync-indicator sync-active"></span>接続状態: オンライン</div>
+                    `;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<p class="error">❌ エラー: ${error.message}</p>`;
+            }
+        }
+
+        // ユーザーID確認
+        function checkUserId() {
+            const statusDiv = document.getElementById('userIdStatus');
+            const userId = 'shared_user_2024'; // supabase-sync.jsと同じID
+
+            statusDiv.innerHTML = `
+                <table>
+                    <tr>
+                        <th>設定項目</th>
+                        <th>値</th>
+                        <th>状態</th>
+                    </tr>
+                    <tr>
+                        <td>共通ユーザーID</td>
+                        <td><code>${userId}</code></td>
+                        <td class="success">✅ 全デバイス共通</td>
+                    </tr>
+                    <tr>
+                        <td>ローカルストレージ</td>
+                        <td>${localStorage.getItem('userId') || '未設定'}</td>
+                        <td>${localStorage.getItem('userId') ? '⚠️ 個別ID（無効）' : '✅ 未使用'}</td>
+                    </tr>
+                </table>
+                <p class="success">全デバイスで「shared_user_2024」を使用中</p>
+            `;
+        }
+
+        // データ同期テスト
+        async function testDataSync() {
+            const statusDiv = document.getElementById('syncTest');
+            statusDiv.innerHTML = '<p>同期テスト実行中...</p>';
+
+            const testData = {
+                [`test_${Date.now()}`]: {
+                    amount: Math.floor(Math.random() * 10000),
+                    note: `テストデータ ${new Date().toLocaleString('ja-JP')}`,
+                    timestamp: Date.now()
+                }
+            };
+
+            try {
+                // データ保存
+                const { error: saveError } = await supabase
+                    .from('sales_data')
+                    .upsert({
+                        user_id: 'shared_user_2024',
+                        data_type: 'test_sync',
+                        data: JSON.stringify(testData),
+                        updated_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'user_id,data_type'
+                    });
+
+                if (saveError) throw saveError;
+
+                // データ読み込み
+                const { data: loadData, error: loadError } = await supabase
+                    .from('sales_data')
+                    .select('*')
+                    .eq('user_id', 'shared_user_2024')
+                    .eq('data_type', 'test_sync')
+                    .single();
+
+                if (loadError) throw loadError;
+
+                statusDiv.innerHTML = `
+                    <p class="success">✅ 同期テスト成功！</p>
+                    <p>保存データ:</p>
+                    <pre>${JSON.stringify(testData, null, 2)}</pre>
+                    <p>読み込みデータ:</p>
+                    <pre>${JSON.stringify(JSON.parse(loadData.data), null, 2)}</pre>
+                    <p>更新時刻: ${new Date(loadData.updated_at).toLocaleString('ja-JP')}</p>
+                `;
+
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <p class="error">❌ 同期エラー: ${error.message}</p>
+                    <pre>${JSON.stringify(error, null, 2)}</pre>
+                `;
+            }
+        }
+
+        // 現在のデータ確認
+        async function loadCurrentData() {
+            const statusDiv = document.getElementById('syncTest');
+            statusDiv.innerHTML = '<p>データ読み込み中...</p>';
+
+            try {
+                const { data, error } = await supabase
+                    .from('sales_data')
+                    .select('*')
+                    .eq('user_id', 'shared_user_2024')
+                    .order('updated_at', { ascending: false });
+
+                if (error) throw error;
+
+                let html = `<p class="success">✅ データ${data.length}件取得</p>`;
+                html += '<table>';
+                html += '<tr><th>データタイプ</th><th>更新日時</th><th>サイズ</th></tr>';
+
+                data.forEach(row => {
+                    const size = new Blob([row.data]).size;
+                    html += `<tr>
+                        <td>${row.data_type}</td>
+                        <td>${new Date(row.updated_at).toLocaleString('ja-JP')}</td>
+                        <td>${size}バイト</td>
+                    </tr>`;
+                });
+                html += '</table>';
+
+                statusDiv.innerHTML = html;
+
+            } catch (error) {
+                statusDiv.innerHTML = `<p class="error">❌ 読み込みエラー: ${error.message}</p>`;
+            }
+        }
+
+        // リアルタイム同期テスト
+        function testRealtimeSync() {
+            const statusDiv = document.getElementById('realtimeStatus');
+
+            statusDiv.innerHTML = `
+                <p class="warning">⚠️ 売上カレンダーは手動同期方式です</p>
+                <p>同期タイミング:</p>
+                <ul>
+                    <li>データ入力時に自動保存</li>
+                    <li>ページ読み込み時に自動読み込み</li>
+                    <li>他デバイスの変更はページリロードで反映</li>
+                </ul>
+                <p>リアルタイム同期が必要な場合は、定期的な自動リロード機能の追加を検討してください。</p>
+            `;
+        }
+
+        // テストデータ削除
+        async function clearTestData() {
+            const statusDiv = document.getElementById('syncTest');
+
+            if (!confirm('テストデータを削除しますか？')) return;
+
+            try {
+                const { error } = await supabase
+                    .from('sales_data')
+                    .delete()
+                    .eq('user_id', 'shared_user_2024')
+                    .eq('data_type', 'test_sync');
+
+                if (error) throw error;
+
+                statusDiv.innerHTML = '<p class="success">✅ テストデータを削除しました</p>';
+
+            } catch (error) {
+                statusDiv.innerHTML = `<p class="error">❌ 削除エラー: ${error.message}</p>`;
+            }
+        }
+
+        // ページ読み込み時に自動実行
+        window.onload = function() {
+            checkConnection();
+            checkUserId();
+        };
+    </script>
+</body>
+</html>

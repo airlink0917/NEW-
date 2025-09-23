@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リアルタイム同期テスト - 売上カレンダー</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            background: #f8f9fa;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .status-box {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .sync-indicator {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .sync-active {
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+        .sync-inactive {
+            background: #ef4444;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        .test-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #e5e7eb;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        .success { color: #22c55e; font-weight: bold; }
+        .error { color: #ef4444; font-weight: bold; }
+        .info { color: #3b82f6; font-weight: bold; }
+        .log-entry {
+            padding: 5px 10px;
+            margin: 2px 0;
+            background: #f3f4f6;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        #syncLog {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 リアルタイム同期テスト</h1>
+
+        <!-- 同期状態 -->
+        <div class="section">
+            <h2>🔄 同期状態</h2>
+            <div class="status-box">
+                <div><span id="syncIndicator" class="sync-indicator sync-inactive"></span><span id="syncStatus">同期停止中</span></div>
+                <div style="margin-top: 10px;">
+                    <span class="info">最終同期: </span><span id="lastSync">-</span>
+                </div>
+                <div style="margin-top: 10px;">
+                    <span class="info">同期間隔: </span><span>5秒</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- テストデータ入力 -->
+        <div class="section">
+            <h2>📝 テストデータ入力</h2>
+            <p style="color: #666;">このデバイスでデータを入力して、他のデバイスで自動更新されることを確認してください。</p>
+            <input type="text" id="testInput" class="test-input" placeholder="テストメッセージを入力">
+            <button onclick="sendTestData()">データ送信</button>
+            <button onclick="clearTestData()">データクリア</button>
+            <div id="testResult" class="status-box" style="margin-top: 10px;"></div>
+        </div>
+
+        <!-- 受信データ表示 -->
+        <div class="section">
+            <h2>📥 受信データ</h2>
+            <p style="color: #666;">他のデバイスから送信されたデータが自動で表示されます。</p>
+            <div id="receivedData" class="status-box">
+                <p style="color: #999;">データ待機中...</p>
+            </div>
+        </div>
+
+        <!-- 同期ログ -->
+        <div class="section">
+            <h2>📊 同期ログ</h2>
+            <button onclick="clearLog()">ログクリア</button>
+            <div id="syncLog"></div>
+        </div>
+
+        <!-- 使い方 -->
+        <div class="section">
+            <h2>📖 リアルタイム同期の確認方法</h2>
+            <ol>
+                <li><strong>2つのデバイス（PC・スマホなど）でこのページを開く</strong></li>
+                <li><strong>デバイスAでテストメッセージを入力して「データ送信」をクリック</strong></li>
+                <li><strong>デバイスBで5秒以内に自動的にメッセージが表示される</strong></li>
+                <li><strong>同期ログで更新タイミングを確認</strong></li>
+            </ol>
+            <p style="margin-top: 15px; color: #666;">
+                <strong>URL:</strong>
+                <code style="background: #f3f4f6; padding: 5px; border-radius: 3px;">
+                    file:///C:/Users/user/OneDrive/デスクトップ/売上カレンダー/realtime_sync_test.html
+                </code>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Supabase設定
+        const SUPABASE_URL = 'https://qddyqqmpqqkkbibplsmn.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkZHlxcW1wcXFra2JpYnBsc21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NTc5MTgsImV4cCI6MjA3MzIzMzkxOH0.KAgZ8D5cRgdPS-AoIeG7bwFiNzbGV8TW22rhGLft6sY';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let syncInterval = null;
+        let lastData = null;
+
+        // ログ追加
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('syncLog');
+            const time = new Date().toLocaleTimeString('ja-JP');
+            const color = type === 'error' ? '#ef4444' : type === 'success' ? '#22c55e' : '#3b82f6';
+            log.innerHTML = `<div style="color: ${color}">[${time}] ${message}</div>` + log.innerHTML;
+        }
+
+        // テストデータ送信
+        async function sendTestData() {
+            const input = document.getElementById('testInput').value;
+            if (!input) {
+                alert('メッセージを入力してください');
+                return;
+            }
+
+            const testData = {
+                message: input,
+                timestamp: new Date().toISOString(),
+                device: navigator.userAgent.includes('Mobile') ? 'Mobile' : 'PC'
+            };
+
+            try {
+                const { error } = await supabase
+                    .from('sales_data')
+                    .upsert({
+                        user_id: 'shared_user_2024',
+                        data_type: 'realtime_test',
+                        data: JSON.stringify(testData),
+                        updated_at: testData.timestamp
+                    }, {
+                        onConflict: 'user_id,data_type'
+                    });
+
+                if (error) throw error;
+
+                document.getElementById('testResult').innerHTML = `
+                    <p class="success">✅ データ送信成功！</p>
+                    <p>メッセージ: ${input}</p>
+                    <p>送信時刻: ${new Date(testData.timestamp).toLocaleString('ja-JP')}</p>
+                `;
+                addLog(`データ送信: "${input}"`, 'success');
+
+                // 入力欄をクリア
+                document.getElementById('testInput').value = '';
+
+            } catch (error) {
+                document.getElementById('testResult').innerHTML = `
+                    <p class="error">❌ 送信エラー: ${error.message}</p>
+                `;
+                addLog(`送信エラー: ${error.message}`, 'error');
+            }
+        }
+
+        // データクリア
+        async function clearTestData() {
+            try {
+                const { error } = await supabase
+                    .from('sales_data')
+                    .delete()
+                    .eq('user_id', 'shared_user_2024')
+                    .eq('data_type', 'realtime_test');
+
+                if (error) throw error;
+
+                document.getElementById('testResult').innerHTML = '<p class="success">✅ データをクリアしました</p>';
+                document.getElementById('receivedData').innerHTML = '<p style="color: #999;">データ待機中...</p>';
+                addLog('データクリア完了', 'success');
+
+            } catch (error) {
+                addLog(`クリアエラー: ${error.message}`, 'error');
+            }
+        }
+
+        // データ取得と表示
+        async function checkForUpdates() {
+            try {
+                const { data, error } = await supabase
+                    .from('sales_data')
+                    .select('*')
+                    .eq('user_id', 'shared_user_2024')
+                    .eq('data_type', 'realtime_test')
+                    .single();
+
+                if (error && error.code !== 'PGRST116') throw error;
+
+                if (data) {
+                    const parsedData = JSON.parse(data.data);
+
+                    // 新しいデータの場合のみ更新
+                    if (!lastData || lastData.timestamp !== parsedData.timestamp) {
+                        document.getElementById('receivedData').innerHTML = `
+                            <p class="success">✅ データ受信！</p>
+                            <p><strong>メッセージ:</strong> ${parsedData.message}</p>
+                            <p><strong>送信元:</strong> ${parsedData.device}</p>
+                            <p><strong>受信時刻:</strong> ${new Date(parsedData.timestamp).toLocaleString('ja-JP')}</p>
+                        `;
+
+                        if (lastData && lastData.timestamp !== parsedData.timestamp) {
+                            addLog(`新しいデータ受信: "${parsedData.message}"`, 'success');
+                        }
+
+                        lastData = parsedData;
+                    }
+                }
+
+                // 同期状態を更新
+                document.getElementById('syncIndicator').className = 'sync-indicator sync-active';
+                document.getElementById('syncStatus').textContent = 'リアルタイム同期中';
+                document.getElementById('syncStatus').className = 'success';
+                document.getElementById('lastSync').textContent = new Date().toLocaleTimeString('ja-JP');
+
+            } catch (error) {
+                if (error.code !== 'PGRST116') {
+                    addLog(`同期エラー: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        // ログクリア
+        function clearLog() {
+            document.getElementById('syncLog').innerHTML = '';
+            addLog('ログをクリアしました');
+        }
+
+        // リアルタイム同期開始
+        function startRealtimeSync() {
+            addLog('リアルタイム同期を開始（5秒ごと）');
+
+            // 初回チェック
+            checkForUpdates();
+
+            // 5秒ごとに同期
+            syncInterval = setInterval(() => {
+                checkForUpdates();
+            }, 5000);
+        }
+
+        // ページ読み込み時に同期開始
+        window.onload = function() {
+            startRealtimeSync();
+            addLog('ページ読み込み完了');
+        };
+
+        // ページを離れるときに同期停止
+        window.addEventListener('beforeunload', () => {
+            if (syncInterval) {
+                clearInterval(syncInterval);
+            }
+        });
+    </script>
+</body>
+</html>

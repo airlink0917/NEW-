@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>モバイルデータ確認</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 20px;
+            margin: 10px 0;
+            font-size: 18px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+        }
+        .data-box {
+            background: #f0f0f0;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            overflow-x: auto;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>📱 モバイルデータ確認</h1>
+
+    <button onclick="checkData()">データを確認</button>
+    <button onclick="copyAllData()">すべてコピー</button>
+
+    <div id="result"></div>
+
+    <script>
+        function checkData() {
+            const resultDiv = document.getElementById('result');
+            let html = '';
+
+            // ローカルストレージの全データを表示
+            const keys = ['calendarData', 'weeklyData', 'depositData', 'withdrawData'];
+
+            keys.forEach(key => {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    html += `<div class="data-box">`;
+                    html += `<h3>✅ ${key}</h3>`;
+
+                    try {
+                        const parsed = JSON.parse(data);
+                        // 日付を含むキーを探す
+                        const dateKeys = Object.keys(parsed).filter(k =>
+                            k.includes('2024-09') || k.includes('9月')
+                        );
+
+                        if (dateKeys.length > 0) {
+                            html += '<h4>見つかった日付:</h4>';
+                            dateKeys.forEach(dk => {
+                                html += `<p>📅 ${dk}</p>`;
+                            });
+                        }
+
+                        html += `<pre>${JSON.stringify(parsed, null, 2).substring(0, 1000)}</pre>`;
+                    } catch (e) {
+                        html += `<pre>${data.substring(0, 500)}</pre>`;
+                    }
+                    html += '</div>';
+                } else {
+                    html += `<div class="data-box">`;
+                    html += `<h3>❌ ${key} - データなし</h3>`;
+                    html += '</div>';
+                }
+            });
+
+            if (html === '') {
+                html = '<p>データが見つかりません</p>';
+            }
+
+            resultDiv.innerHTML = html;
+        }
+
+        function copyAllData() {
+            const allData = {};
+
+            ['calendarData', 'weeklyData', 'depositData', 'withdrawData'].forEach(key => {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    try {
+                        allData[key] = JSON.parse(data);
+                    } catch (e) {
+                        allData[key] = data;
+                    }
+                }
+            });
+
+            const textData = JSON.stringify(allData, null, 2);
+
+            // コピー処理
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(textData).then(() => {
+                    alert('データをコピーしました！\nメモアプリに貼り付けて保存してください。');
+                }).catch(() => {
+                    // フォールバック
+                    const textarea = document.createElement('textarea');
+                    textarea.value = textData;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    alert('データをコピーしました！');
+                });
+            }
+        }
+
+        // 自動実行
+        window.onload = function() {
+            checkData();
+        };
+    </script>
+</body>
+</html>

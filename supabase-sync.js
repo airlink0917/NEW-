@@ -211,58 +211,105 @@ async function syncAllData() {
     }
 }
 
-// リアルタイム同期の設定
+// リアルタイム同期の設定（5秒ごとのポーリング）
+let syncInterval = null;
+let lastSyncTime = Date.now();
+
 function setupRealtimeSync() {
     if (!supabase) return;
-    
-    const userId = getUserId();
-    
-    // リアルタイム更新の購読
-    supabase
-        .channel('sales_data_changes')
-        .on('postgres_changes', {
-            event: '*',
-            schema: 'public',
-            table: 'sales_data',
-            filter: `user_id=eq.${userId}`
-        }, async (payload) => {
-            console.log('Data changed:', payload);
-            
-            // 他のデバイスからの更新を検知
-            if (payload.new) {
-                const dataType = payload.new.data_type;
-                const data = JSON.parse(payload.new.data);
-                const updatedAt = payload.new.updated_at;
-                
-                // ローカルストレージを更新
-                switch(dataType) {
-                    case 'calendar':
-                        localStorage.setItem('calendarData', JSON.stringify(data));
-                        localStorage.setItem('calendarDataUpdated', updatedAt);
-                        if (typeof updateCalendar === 'function') updateCalendar();
-                        break;
-                    case 'weekly':
-                        localStorage.setItem('weeklyData', JSON.stringify(data));
-                        localStorage.setItem('weeklyDataUpdated', updatedAt);
-                        if (typeof updateCalendar === 'function') updateCalendar();
-                        break;
-                    case 'deposit':
-                        localStorage.setItem('depositData', JSON.stringify(data));
-                        localStorage.setItem('depositDataUpdated', updatedAt);
-                        if (typeof updateDepositTable === 'function') updateDepositTable();
-                        break;
-                    case 'withdraw':
-                        localStorage.setItem('withdrawData', JSON.stringify(data));
-                        localStorage.setItem('withdrawDataUpdated', updatedAt);
-                        if (typeof updateWithdrawTable === 'function') updateWithdrawTable();
-                        break;
+
+    console.log('リアルタイム同期を開始します（5秒ごと）');
+
+    // 既存のインターバルをクリア
+    if (syncInterval) {
+        clearInterval(syncInterval);
+    }
+
+    // 5秒ごとにデータを同期
+    syncInterval = setInterval(async () => {
+        try {
+            const userId = getUserId();
+
+            // Supabaseから最新データを取得
+            const remoteCalendar = await loadFromSupabase('calendar');
+            const remoteWeekly = await loadFromSupabase('weekly');
+            const remoteDeposit = await loadFromSupabase('deposit');
+            const remoteWithdraw = await loadFromSupabase('withdraw');
+
+            let hasUpdates = false;
+
+            // カレンダーデータの確認と更新
+            if (remoteCalendar) {
+                const localUpdated = localStorage.getItem('calendarDataUpdated');
+                if (!localUpdated || new Date(remoteCalendar.updatedAt) > new Date(localUpdated)) {
+                    localStorage.setItem('calendarData', JSON.stringify(remoteCalendar.data));
+                    localStorage.setItem('calendarDataUpdated', remoteCalendar.updatedAt);
+                    if (typeof updateCalendar === 'function') updateCalendar();
+                    hasUpdates = true;
                 }
-                
-                // 画面を更新
+            }
+
+            // 週次データの確認と更新
+            if (remoteWeekly) {
+                const localUpdated = localStorage.getItem('weeklyDataUpdated');
+                if (!localUpdated || new Date(remoteWeekly.updatedAt) > new Date(localUpdated)) {
+                    localStorage.setItem('weeklyData', JSON.stringify(remoteWeekly.data));
+                    localStorage.setItem('weeklyDataUpdated', remoteWeekly.updatedAt);
+                    if (typeof updateCalendar === 'function') updateCalendar();
+                    hasUpdates = true;
+                }
+            }
+
+            // 入金データの確認と更新
+            if (remoteDeposit) {
+                const localUpdated = localStorage.getItem('depositDataUpdated');
+                if (!localUpdated || new Date(remoteDeposit.updatedAt) > new Date(localUpdated)) {
+                    localStorage.setItem('depositData', JSON.stringify(remoteDeposit.data));
+                    localStorage.setItem('depositDataUpdated', remoteDeposit.updatedAt);
+                    if (typeof updateDepositTable === 'function') updateDepositTable();
+                    hasUpdates = true;
+                }
+            }
+
+            // 出金データの確認と更新
+            if (remoteWithdraw) {
+                const localUpdated = localStorage.getItem('withdrawDataUpdated');
+                if (!localUpdated || new Date(remoteWithdraw.updatedAt) > new Date(localUpdated)) {
+                    localStorage.setItem('withdrawData', JSON.stringify(remoteWithdraw.data));
+                    localStorage.setItem('withdrawDataUpdated', remoteWithdraw.updatedAt);
+                    if (typeof updateWithdrawTable === 'function') updateWithdrawTable();
+                    hasUpdates = true;
+                }
+            }
+
+            // 更新があった場合は画面に表示
+            if (hasUpdates) {
+                console.log('他デバイスからの更新を検知しました');
                 if (typeof showAutoSaveIndicator === 'function') {
                     showAutoSaveIndicator();
                 }
             }
-        })
-        .subscribe();
+
+            lastSyncTime = Date.now();
+
+        } catch (error) {
+            console.error('リアルタイム同期エラー:', error);
+        }
+    }, 5000); // 5秒ごと
+
+    // ページを離れるときにインターバルをクリア
+    window.addEventListener('beforeunload', () => {
+        if (syncInterval) {
+            clearInterval(syncInterval);
+        }
+    });
+}
+
+// 同期を停止
+function stopRealtimeSync() {
+    if (syncInterval) {
+        clearInterval(syncInterval);
+        syncInterval = null;
+        console.log('リアルタイム同期を停止しました');
+    }
 }
