@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>すべてのブラウザデータを確認</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background: #0056b3; }
+        .data-display { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; max-height: 400px; overflow-y: auto; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; }
+        .warning { color: orange; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body>
+    <h1>🔍 すべてのブラウザ保存データを確認</h1>
+
+    <div class="section">
+        <h2>ローカルストレージのすべてのデータ</h2>
+        <button onclick="checkAllLocalStorage()">すべて表示</button>
+        <button onclick="exportAllData()">すべてエクスポート</button>
+        <div id="localStorageDisplay"></div>
+    </div>
+
+    <div class="section">
+        <h2>セッションストレージのデータ</h2>
+        <button onclick="checkSessionStorage()">確認</button>
+        <div id="sessionStorageDisplay"></div>
+    </div>
+
+    <div class="section">
+        <h2>IndexedDBのデータ</h2>
+        <button onclick="checkIndexedDB()">確認</button>
+        <div id="indexedDBDisplay"></div>
+    </div>
+
+    <script>
+        function checkAllLocalStorage() {
+            const display = document.getElementById('localStorageDisplay');
+            let html = '<h3>保存されているすべてのデータ:</h3>';
+
+            if (localStorage.length === 0) {
+                html += '<p class="warning">データがありません</p>';
+            } else {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const value = localStorage.getItem(key);
+
+                    html += `<div class="data-display">`;
+                    html += `<p class="success">キー: ${key}</p>`;
+
+                    try {
+                        const parsed = JSON.parse(value);
+
+                        // 日付データを探す
+                        let dateInfo = '';
+                        if (typeof parsed === 'object') {
+                            // オブジェクトの中から日付らしきキーを探す
+                            for (let objKey in parsed) {
+                                if (objKey.includes('2024') || objKey.includes('年') || objKey.includes('月') || objKey.includes('日')) {
+                                    dateInfo += `日付キー発見: ${objKey}\n`;
+                                }
+                            }
+                        }
+
+                        html += `<pre>${dateInfo}\n${JSON.stringify(parsed, null, 2).substring(0, 1000)}</pre>`;
+
+                        // データのサイズと項目数
+                        const size = new Blob([value]).size;
+                        const itemCount = typeof parsed === 'object' ? Object.keys(parsed).length : 0;
+                        html += `<p>サイズ: ${size}バイト | 項目数: ${itemCount}</p>`;
+
+                    } catch (e) {
+                        // JSON以外のデータ
+                        html += `<pre>${value.substring(0, 500)}</pre>`;
+                    }
+                    html += '</div>';
+                }
+            }
+
+            display.innerHTML = html;
+        }
+
+        function checkSessionStorage() {
+            const display = document.getElementById('sessionStorageDisplay');
+            let html = '<h3>セッションストレージ:</h3>';
+
+            if (sessionStorage.length === 0) {
+                html += '<p class="warning">データがありません</p>';
+            } else {
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    const value = sessionStorage.getItem(key);
+                    html += `<div class="data-display">`;
+                    html += `<p class="success">キー: ${key}</p>`;
+                    html += `<pre>${value.substring(0, 500)}</pre>`;
+                    html += '</div>';
+                }
+            }
+
+            display.innerHTML = html;
+        }
+
+        async function checkIndexedDB() {
+            const display = document.getElementById('indexedDBDisplay');
+            let html = '<h3>IndexedDB:</h3>';
+
+            try {
+                const databases = await indexedDB.databases();
+                if (databases.length === 0) {
+                    html += '<p class="warning">データベースがありません</p>';
+                } else {
+                    for (const db of databases) {
+                        html += `<p class="success">データベース: ${db.name} (バージョン: ${db.version})</p>`;
+                    }
+                }
+            } catch (e) {
+                html += '<p class="error">IndexedDBにアクセスできません</p>';
+            }
+
+            display.innerHTML = html;
+        }
+
+        function exportAllData() {
+            const allData = {
+                exportDate: new Date().toISOString(),
+                localStorage: {},
+                sessionStorage: {}
+            };
+
+            // LocalStorage
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                try {
+                    allData.localStorage[key] = JSON.parse(value);
+                } catch (e) {
+                    allData.localStorage[key] = value;
+                }
+            }
+
+            // SessionStorage
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                const value = sessionStorage.getItem(key);
+                try {
+                    allData.sessionStorage[key] = JSON.parse(value);
+                } catch (e) {
+                    allData.sessionStorage[key] = value;
+                }
+            }
+
+            // ダウンロード
+            const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `全ブラウザデータ_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            alert('すべてのデータをエクスポートしました！');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabaseデータ復元と診断</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background: #0056b3; }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Supabaseデータ復元と診断ツール</h1>
+
+    <div class="section">
+        <h2>1. Supabase接続診断</h2>
+        <button onclick="checkConnection()">接続確認</button>
+        <div id="connectionStatus"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. データベーステーブル確認</h2>
+        <button onclick="checkTables()">テーブル確認</button>
+        <div id="tableStatus"></div>
+    </div>
+
+    <div class="section">
+        <h2>3. 削除されたデータの復元（Point-in-Time Recovery）</h2>
+        <p class="warning">⚠️ この機能はSupabaseのPro以上のプランが必要です</p>
+        <button onclick="checkBackupStatus()">バックアップ状態確認</button>
+        <div id="backupStatus"></div>
+    </div>
+
+    <div class="section">
+        <h2>4. テーブル再作成とデータ復元</h2>
+        <button onclick="recreateTable()">テーブル再作成</button>
+        <button onclick="restoreFromLocal()">ローカルから復元</button>
+        <div id="recreateStatus"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://qddyqqmpqqkkbibplsmn.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkZHlxcW1wcXFra2JpYnBsc21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NTc5MTgsImV4cCI6MjA3MzIzMzkxOH0.KAgZ8D5cRgdPS-AoIeG7bwFiNzbGV8TW22rhGLft6sY';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function checkConnection() {
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.innerHTML = '<p>接続確認中...</p>';
+
+            try {
+                // 接続テスト
+                const { data, error } = await supabase.from('sales_data').select('count', { count: 'exact' });
+
+                if (error) {
+                    if (error.code === '42P01') {
+                        statusDiv.innerHTML = '<p class="warning">⚠️ テーブルが存在しません</p>';
+                    } else {
+                        statusDiv.innerHTML = `<p class="error">❌ エラー: ${error.message}</p>`;
+                    }
+                } else {
+                    statusDiv.innerHTML = '<p class="success">✅ Supabase接続成功</p>';
+                }
+
+                // プロジェクト情報表示
+                statusDiv.innerHTML += `
+                    <div style="margin-top: 10px;">
+                        <p><strong>プロジェクトID:</strong> qddyqqmpqqkkbibplsmn</p>
+                        <p><strong>URL:</strong> ${SUPABASE_URL}</p>
+                    </div>
+                `;
+
+            } catch (error) {
+                statusDiv.innerHTML = `<p class="error">❌ 接続エラー: ${error.message}</p>`;
+            }
+        }
+
+        async function checkTables() {
+            const statusDiv = document.getElementById('tableStatus');
+            statusDiv.innerHTML = '<p>テーブル確認中...</p>';
+
+            try {
+                // sales_dataテーブルのデータを取得
+                const { data, error, count } = await supabase
+                    .from('sales_data')
+                    .select('*', { count: 'exact' })
+                    .order('updated_at', { ascending: false });
+
+                if (error) {
+                    if (error.code === '42P01') {
+                        statusDiv.innerHTML = `
+                            <p class="error">❌ テーブル "sales_data" が存在しません</p>
+                            <p>「テーブル再作成」ボタンをクリックしてください</p>
+                        `;
+                    } else {
+                        statusDiv.innerHTML = `<p class="error">❌ エラー: ${error.message}</p>`;
+                    }
+                    return;
+                }
+
+                let html = `<p class="success">✅ テーブル "sales_data" 存在確認</p>`;
+                html += `<p>データ件数: ${count || 0}件</p>`;
+
+                if (data && data.length > 0) {
+                    html += '<table>';
+                    html += '<tr><th>User ID</th><th>Data Type</th><th>更新日時</th><th>データ(一部)</th></tr>';
+
+                    data.forEach(row => {
+                        const preview = JSON.stringify(row.data).substring(0, 50) + '...';
+                        const date = new Date(row.updated_at).toLocaleString('ja-JP');
+                        html += `<tr>
+                            <td>${row.user_id}</td>
+                            <td>${row.data_type}</td>
+                            <td>${date}</td>
+                            <td>${preview}</td>
+                        </tr>`;
+                    });
+                    html += '</table>';
+                } else {
+                    html += '<p class="warning">⚠️ テーブルは存在しますが、データがありません</p>';
+                }
+
+                statusDiv.innerHTML = html;
+
+            } catch (error) {
+                statusDiv.innerHTML = `<p class="error">❌ エラー: ${error.message}</p>`;
+            }
+        }
+
+        async function checkBackupStatus() {
+            const statusDiv = document.getElementById('backupStatus');
+            statusDiv.innerHTML = `
+                <h3>Supabaseでのバックアップ復元方法：</h3>
+                <ol>
+                    <li><a href="https://supabase.com/dashboard/project/qddyqqmpqqkkbibplsmn" target="_blank">Supabaseダッシュボード</a>にログイン</li>
+                    <li>左メニューの「Database」→「Backups」を選択</li>
+                    <li>「Point-in-Time Recovery」セクションを確認</li>
+                    <li>もし有効な場合、復元したい日時を選択</li>
+                    <li>「Restore」ボタンをクリック</li>
+                </ol>
+                <p class="warning">⚠️ 無料プランではこの機能は利用できません</p>
+            `;
+        }
+
+        async function recreateTable() {
+            const statusDiv = document.getElementById('recreateStatus');
+            statusDiv.innerHTML = '<p>テーブル作成中...</p>';
+
+            const createTableSQL = `
+                -- 既存のテーブルが存在する場合は削除（注意：データも削除されます）
+                -- DROP TABLE IF EXISTS sales_data;
+
+                -- テーブル作成
+                CREATE TABLE IF NOT EXISTS sales_data (
+                    id SERIAL PRIMARY KEY,
+                    user_id VARCHAR(255) NOT NULL,
+                    data_type VARCHAR(50) NOT NULL,
+                    data JSONB NOT NULL,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                    UNIQUE(user_id, data_type)
+                );
+
+                -- インデックスの作成
+                CREATE INDEX IF NOT EXISTS idx_sales_data_user_id ON sales_data(user_id);
+                CREATE INDEX IF NOT EXISTS idx_sales_data_data_type ON sales_data(data_type);
+                CREATE INDEX IF NOT EXISTS idx_sales_data_updated_at ON sales_data(updated_at);
+            `;
+
+            statusDiv.innerHTML = `
+                <h3>テーブル作成用SQL：</h3>
+                <pre>${createTableSQL}</pre>
+                <p>手順：</p>
+                <ol>
+                    <li><a href="https://supabase.com/dashboard/project/qddyqqmpqqkkbibplsmn/sql/new" target="_blank">SQL Editor</a>を開く</li>
+                    <li>上記のSQLをコピー＆ペースト</li>
+                    <li>「Run」ボタンをクリック</li>
+                </ol>
+            `;
+        }
+
+        async function restoreFromLocal() {
+            const statusDiv = document.getElementById('recreateStatus');
+            statusDiv.innerHTML = '<p>ローカルデータから復元中...</p>';
+
+            const userId = 'shared_user_2024';
+            const results = [];
+
+            // 各データタイプを復元
+            const dataTypes = [
+                { key: 'calendarData', type: 'calendar' },
+                { key: 'weeklyData', type: 'weekly' },
+                { key: 'depositData', type: 'deposit' },
+                { key: 'withdrawData', type: 'withdraw' }
+            ];
+
+            for (const { key, type } of dataTypes) {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    try {
+                        const { error } = await supabase
+                            .from('sales_data')
+                            .upsert({
+                                user_id: userId,
+                                data_type: type,
+                                data: data,
+                                updated_at: new Date().toISOString()
+                            }, {
+                                onConflict: 'user_id,data_type'
+                            });
+
+                        if (error) throw error;
+                        results.push(`<p class="success">✅ ${type} データ復元成功</p>`);
+                    } catch (error) {
+                        results.push(`<p class="error">❌ ${type} データ復元失敗: ${error.message}</p>`);
+                    }
+                } else {
+                    results.push(`<p class="warning">⚠️ ${type} ローカルデータなし</p>`);
+                }
+            }
+
+            statusDiv.innerHTML = '<h3>復元結果:</h3>' + results.join('');
+        }
+    </script>
+</body>
+</html>
