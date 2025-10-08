@@ -4301,16 +4301,17 @@
             }
         }
 
-        // 月間売上合計を取得
+        // 月間売上合計を取得（売上管理ページと同じ計算方法）
         function getMonthlySalesTotal(year, month) {
-            const data = calendarData[year] ? calendarData[year][month] : null;
-            if (!data) return 0;
-
             let total = 0;
-            for (let day in data) {
-                const sales = parseFloat(data[day].sales) || 0;
-                total += sales;
+
+            for (const [dateStr, data] of Object.entries(calendarData)) {
+                const [y, m] = dateStr.split('-').map(Number);
+                if (y === year && m === month) {
+                    total += parseInt(data.sales) || 0;
+                }
             }
+
             return total;
         }
 
