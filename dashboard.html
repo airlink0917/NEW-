@@ -2195,7 +2195,6 @@
                                             <th>精算書額</th>
                                             <th>差額</th>
                                             <th>後日入金予定日</th>
-                                            <th>入金日</th>
                                             <th>入金確認日</th>
                                             <th>操作</th>
                                         </tr>
@@ -2255,11 +2254,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="paymentDate">入金日:</label>
-                        <input type="date" id="paymentDate">
                     </div>
 
                     <div class="form-group">
@@ -4416,16 +4410,8 @@
                 const dueDate = getPaymentDueDate(year, month);
                 const dueDateStr = `${dueDate.getFullYear()}年${dueDate.getMonth() + 1}月${dueDate.getDate()}日`;
 
-                // 入金日と入金確認日
-                const actualPaymentDate = deferredData.paymentDate || '';
+                // 入金確認日
                 const confirmationDate = deferredData.confirmationDate || '';
-
-                // 入金日の表示（YYYY-MM-DD形式を日本語形式に変換）
-                let actualPaymentDisplay = '';
-                if (actualPaymentDate) {
-                    const pd = new Date(actualPaymentDate);
-                    actualPaymentDisplay = `${pd.getFullYear()}年${pd.getMonth() + 1}月${pd.getDate()}日`;
-                }
 
                 // 入金確認日の表示
                 let confirmationDisplay = '';
@@ -4443,7 +4429,6 @@
                         ¥${difference.toLocaleString()}
                     </td>
                     <td>${dueDateStr}</td>
-                    <td>${actualPaymentDisplay}</td>
                     <td>${confirmationDisplay}</td>
                     <td style="text-align: center;">
                         <button onclick="openDeferredPaymentModal(${year}, ${month})"
@@ -4465,7 +4450,6 @@
             document.getElementById('deferredYear').value = year;
             document.getElementById('deferredMonthDisplay').value = `${year}年${month}月`;
             document.getElementById('settlementAmount').value = deferredData.settlementAmount || '0';
-            document.getElementById('paymentDate').value = deferredData.paymentDate || '';
             document.getElementById('confirmationDate').value = deferredData.confirmationDate || '';
 
             document.getElementById('deferredPaymentModal').style.display = 'block';
@@ -4485,7 +4469,6 @@
             const monthKey = `${year}-${String(month).padStart(2, '0')}`;
 
             const settlementAmount = parseFloat(document.getElementById('settlementAmount').value) || 0;
-            const paymentDate = document.getElementById('paymentDate').value;
             const confirmationDate = document.getElementById('confirmationDate').value;
 
             if (!deferredPaymentData[monthKey]) {
@@ -4493,7 +4476,6 @@
             }
 
             deferredPaymentData[monthKey].settlementAmount = settlementAmount;
-            deferredPaymentData[monthKey].paymentDate = paymentDate;
             deferredPaymentData[monthKey].confirmationDate = confirmationDate;
 
             saveDeferredPaymentToStorage();
