@@ -1871,7 +1871,7 @@
                         <h1>売上管理システム</h1>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <button class="manual-save-btn" onclick="manualSaveNow()" title="クリックすると即座にすべてのデータを保存し、他の端末にすぐ反映されます">
-                                💾 今すぐ保存
+                                手動保存
                             </button>
                             <button class="logout-btn" onclick="logout()">ログアウト</button>
                         </div>
@@ -3263,7 +3263,7 @@
             try {
                 // ボタンを保存中状態に
                 btn.classList.add('saving');
-                btn.textContent = '💾 保存中...';
+                btn.textContent = '保存中...';
 
                 const timestamp = new Date().toISOString();
 
@@ -3287,20 +3287,20 @@
                     ]);
                 }
 
-                showMessage('✅ 保存完了！他の端末にすぐ反映されます', 'success');
+                showMessage('保存完了！他の端末にすぐ反映されます', 'success');
                 showAutoSaveIndicator();
 
                 // ボタンを元に戻す
                 btn.classList.remove('saving');
-                btn.textContent = '💾 今すぐ保存';
+                btn.textContent = '手動保存';
 
             } catch (error) {
                 console.error('Manual save error:', error);
-                showMessage('❌ 保存に失敗しました', 'error');
+                showMessage('保存に失敗しました', 'error');
 
                 // エラー時もボタンを元に戻す
                 btn.classList.remove('saving');
-                btn.textContent = '💾 今すぐ保存';
+                btn.textContent = '手動保存';
             }
         }
         
