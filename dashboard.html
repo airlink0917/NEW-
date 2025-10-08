@@ -270,6 +270,31 @@
             background: #4b5563;
         }
 
+        .manual-save-btn {
+            padding: 8px 20px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .manual-save-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .manual-save-btn:active {
+            transform: translateY(0);
+        }
+
+        .manual-save-btn.saving {
+            background: #fbbf24;
+            pointer-events: none;
+        }
+
         .calendar-controls {
             display: flex;
             gap: 20px;
@@ -1844,7 +1869,12 @@
                 <div class="content-section active" id="calendar-section">
                     <div class="dashboard-header">
                         <h1>売上管理システム</h1>
-                        <button class="logout-btn" onclick="logout()">ログアウト</button>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button class="manual-save-btn" onclick="manualSaveNow()" title="クリックすると即座にすべてのデータを保存し、他の端末にすぐ反映されます">
+                                💾 今すぐ保存
+                            </button>
+                            <button class="logout-btn" onclick="logout()">ログアウト</button>
+                        </div>
                     </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -3196,19 +3226,19 @@
         function saveAllData() {
             try {
                 const timestamp = new Date().toISOString();
-                
+
                 localStorage.setItem('calendarData', JSON.stringify(calendarData));
                 localStorage.setItem('calendarDataUpdated', timestamp);
-                
+
                 localStorage.setItem('weeklyData', JSON.stringify(weeklyData));
                 localStorage.setItem('weeklyDataUpdated', timestamp);
-                
+
                 localStorage.setItem('depositData', JSON.stringify(depositData));
                 localStorage.setItem('depositDataUpdated', timestamp);
-                
+
                 localStorage.setItem('withdrawData', JSON.stringify(withdrawData));
                 localStorage.setItem('withdrawDataUpdated', timestamp);
-                
+
                 // Supabaseに同期（設定されている場合）
                 if (typeof saveToSupabase === 'function' && supabase) {
                     saveToSupabase('calendar', calendarData);
@@ -3216,12 +3246,61 @@
                     saveToSupabase('deposit', depositData);
                     saveToSupabase('withdraw', withdrawData);
                 }
-                
+
                 showMessage('データをバックアップしました！', 'success');
                 showAutoSaveIndicator();
             } catch (error) {
                 console.error('Save error:', error);
                 showMessage('バックアップに失敗しました', 'error');
+            }
+        }
+
+        // 手動保存機能（即座にSupabaseに保存）
+        async function manualSaveNow() {
+            const btn = document.querySelector('.manual-save-btn');
+            if (!btn) return;
+
+            try {
+                // ボタンを保存中状態に
+                btn.classList.add('saving');
+                btn.textContent = '💾 保存中...';
+
+                const timestamp = new Date().toISOString();
+
+                // ローカルストレージに保存
+                localStorage.setItem('calendarData', JSON.stringify(calendarData));
+                localStorage.setItem('calendarDataUpdated', timestamp);
+                localStorage.setItem('weeklyData', JSON.stringify(weeklyData));
+                localStorage.setItem('weeklyDataUpdated', timestamp);
+                localStorage.setItem('depositData', JSON.stringify(depositData));
+                localStorage.setItem('depositDataUpdated', timestamp);
+                localStorage.setItem('withdrawData', JSON.stringify(withdrawData));
+                localStorage.setItem('withdrawDataUpdated', timestamp);
+
+                // Supabaseに即座に保存
+                if (typeof saveToSupabase === 'function' && supabase) {
+                    await Promise.all([
+                        saveToSupabase('calendar', calendarData),
+                        saveToSupabase('weekly', weeklyData),
+                        saveToSupabase('deposit', depositData),
+                        saveToSupabase('withdraw', withdrawData)
+                    ]);
+                }
+
+                showMessage('✅ 保存完了！他の端末にすぐ反映されます', 'success');
+                showAutoSaveIndicator();
+
+                // ボタンを元に戻す
+                btn.classList.remove('saving');
+                btn.textContent = '💾 今すぐ保存';
+
+            } catch (error) {
+                console.error('Manual save error:', error);
+                showMessage('❌ 保存に失敗しました', 'error');
+
+                // エラー時もボタンを元に戻す
+                btn.classList.remove('saving');
+                btn.textContent = '💾 今すぐ保存';
             }
         }
         
