@@ -47,12 +47,12 @@ async function saveToSupabase(dataType, data) {
         console.error('Supabaseクライアントが初期化されていません');
         return false;
     }
-
+    
     const userId = getUserId();
     const timestamp = new Date().toISOString();
-
+    
     console.log(`データ保存中... タイプ: ${dataType}, ユーザーID: ${userId}`);
-
+    
     try {
         const { error } = await supabase
             .from('sales_data')
@@ -64,13 +64,8 @@ async function saveToSupabase(dataType, data) {
             }, {
                 onConflict: 'user_id,data_type'
             });
-
+        
         if (error) throw error;
-
-        // ローカルストレージのタイムスタンプも更新（同期との競合を防ぐ）
-        const dataTypeKey = dataType + 'DataUpdated';
-        localStorage.setItem(dataTypeKey, timestamp);
-
         console.log(`データ保存成功: ${dataType}`);
         return true;
     } catch (error) {
@@ -243,48 +238,44 @@ function setupRealtimeSync() {
 
             let hasUpdates = false;
 
-            // カレンダーデータの確認と更新（JSON比較方式）
+            // カレンダーデータの確認と更新
             if (remoteCalendar) {
-                const localData = localStorage.getItem('calendarData');
-                const remoteDataJson = JSON.stringify(remoteCalendar.data);
-                if (localData !== remoteDataJson) {
-                    localStorage.setItem('calendarData', remoteDataJson);
+                const localUpdated = localStorage.getItem('calendarDataUpdated');
+                if (!localUpdated || new Date(remoteCalendar.updatedAt) > new Date(localUpdated)) {
+                    localStorage.setItem('calendarData', JSON.stringify(remoteCalendar.data));
                     localStorage.setItem('calendarDataUpdated', remoteCalendar.updatedAt);
                     if (typeof updateCalendar === 'function') updateCalendar();
                     hasUpdates = true;
                 }
             }
 
-            // 週次データの確認と更新（JSON比較方式）
+            // 週次データの確認と更新
             if (remoteWeekly) {
-                const localData = localStorage.getItem('weeklyData');
-                const remoteDataJson = JSON.stringify(remoteWeekly.data);
-                if (localData !== remoteDataJson) {
-                    localStorage.setItem('weeklyData', remoteDataJson);
+                const localUpdated = localStorage.getItem('weeklyDataUpdated');
+                if (!localUpdated || new Date(remoteWeekly.updatedAt) > new Date(localUpdated)) {
+                    localStorage.setItem('weeklyData', JSON.stringify(remoteWeekly.data));
                     localStorage.setItem('weeklyDataUpdated', remoteWeekly.updatedAt);
                     if (typeof updateCalendar === 'function') updateCalendar();
                     hasUpdates = true;
                 }
             }
 
-            // 入金データの確認と更新（JSON比較方式）
+            // 入金データの確認と更新
             if (remoteDeposit) {
-                const localData = localStorage.getItem('depositData');
-                const remoteDataJson = JSON.stringify(remoteDeposit.data);
-                if (localData !== remoteDataJson) {
-                    localStorage.setItem('depositData', remoteDataJson);
+                const localUpdated = localStorage.getItem('depositDataUpdated');
+                if (!localUpdated || new Date(remoteDeposit.updatedAt) > new Date(localUpdated)) {
+                    localStorage.setItem('depositData', JSON.stringify(remoteDeposit.data));
                     localStorage.setItem('depositDataUpdated', remoteDeposit.updatedAt);
                     if (typeof updateDepositTable === 'function') updateDepositTable();
                     hasUpdates = true;
                 }
             }
 
-            // 出金データの確認と更新（JSON比較方式）
+            // 出金データの確認と更新
             if (remoteWithdraw) {
-                const localData = localStorage.getItem('withdrawData');
-                const remoteDataJson = JSON.stringify(remoteWithdraw.data);
-                if (localData !== remoteDataJson) {
-                    localStorage.setItem('withdrawData', remoteDataJson);
+                const localUpdated = localStorage.getItem('withdrawDataUpdated');
+                if (!localUpdated || new Date(remoteWithdraw.updatedAt) > new Date(localUpdated)) {
+                    localStorage.setItem('withdrawData', JSON.stringify(remoteWithdraw.data));
                     localStorage.setItem('withdrawDataUpdated', remoteWithdraw.updatedAt);
                     if (typeof updateWithdrawTable === 'function') updateWithdrawTable();
                     hasUpdates = true;
