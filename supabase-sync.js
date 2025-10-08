@@ -47,12 +47,12 @@ async function saveToSupabase(dataType, data) {
         console.error('Supabaseクライアントが初期化されていません');
         return false;
     }
-    
+
     const userId = getUserId();
     const timestamp = new Date().toISOString();
-    
+
     console.log(`データ保存中... タイプ: ${dataType}, ユーザーID: ${userId}`);
-    
+
     try {
         const { error } = await supabase
             .from('sales_data')
@@ -64,8 +64,13 @@ async function saveToSupabase(dataType, data) {
             }, {
                 onConflict: 'user_id,data_type'
             });
-        
+
         if (error) throw error;
+
+        // ローカルストレージのタイムスタンプも更新（同期との競合を防ぐ）
+        const dataTypeKey = dataType + 'DataUpdated';
+        localStorage.setItem(dataTypeKey, timestamp);
+
         console.log(`データ保存成功: ${dataType}`);
         return true;
     } catch (error) {
