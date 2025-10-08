@@ -238,44 +238,48 @@ function setupRealtimeSync() {
 
             let hasUpdates = false;
 
-            // カレンダーデータの確認と更新
+            // カレンダーデータの確認と更新（JSON比較方式）
             if (remoteCalendar) {
-                const localUpdated = localStorage.getItem('calendarDataUpdated');
-                if (!localUpdated || new Date(remoteCalendar.updatedAt) > new Date(localUpdated)) {
-                    localStorage.setItem('calendarData', JSON.stringify(remoteCalendar.data));
+                const localData = localStorage.getItem('calendarData');
+                const remoteDataJson = JSON.stringify(remoteCalendar.data);
+                if (localData !== remoteDataJson) {
+                    localStorage.setItem('calendarData', remoteDataJson);
                     localStorage.setItem('calendarDataUpdated', remoteCalendar.updatedAt);
                     if (typeof updateCalendar === 'function') updateCalendar();
                     hasUpdates = true;
                 }
             }
 
-            // 週次データの確認と更新
+            // 週次データの確認と更新（JSON比較方式）
             if (remoteWeekly) {
-                const localUpdated = localStorage.getItem('weeklyDataUpdated');
-                if (!localUpdated || new Date(remoteWeekly.updatedAt) > new Date(localUpdated)) {
-                    localStorage.setItem('weeklyData', JSON.stringify(remoteWeekly.data));
+                const localData = localStorage.getItem('weeklyData');
+                const remoteDataJson = JSON.stringify(remoteWeekly.data);
+                if (localData !== remoteDataJson) {
+                    localStorage.setItem('weeklyData', remoteDataJson);
                     localStorage.setItem('weeklyDataUpdated', remoteWeekly.updatedAt);
                     if (typeof updateCalendar === 'function') updateCalendar();
                     hasUpdates = true;
                 }
             }
 
-            // 入金データの確認と更新
+            // 入金データの確認と更新（JSON比較方式）
             if (remoteDeposit) {
-                const localUpdated = localStorage.getItem('depositDataUpdated');
-                if (!localUpdated || new Date(remoteDeposit.updatedAt) > new Date(localUpdated)) {
-                    localStorage.setItem('depositData', JSON.stringify(remoteDeposit.data));
+                const localData = localStorage.getItem('depositData');
+                const remoteDataJson = JSON.stringify(remoteDeposit.data);
+                if (localData !== remoteDataJson) {
+                    localStorage.setItem('depositData', remoteDataJson);
                     localStorage.setItem('depositDataUpdated', remoteDeposit.updatedAt);
                     if (typeof updateDepositTable === 'function') updateDepositTable();
                     hasUpdates = true;
                 }
             }
 
-            // 出金データの確認と更新
+            // 出金データの確認と更新（JSON比較方式）
             if (remoteWithdraw) {
-                const localUpdated = localStorage.getItem('withdrawDataUpdated');
-                if (!localUpdated || new Date(remoteWithdraw.updatedAt) > new Date(localUpdated)) {
-                    localStorage.setItem('withdrawData', JSON.stringify(remoteWithdraw.data));
+                const localData = localStorage.getItem('withdrawData');
+                const remoteDataJson = JSON.stringify(remoteWithdraw.data);
+                if (localData !== remoteDataJson) {
+                    localStorage.setItem('withdrawData', remoteDataJson);
                     localStorage.setItem('withdrawDataUpdated', remoteWithdraw.updatedAt);
                     if (typeof updateWithdrawTable === 'function') updateWithdrawTable();
                     hasUpdates = true;
