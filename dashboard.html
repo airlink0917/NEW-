@@ -1862,6 +1862,9 @@
                     <button class="menu-item" onclick="showSection('cashflow')">
                         <span>入出金</span>
                     </button>
+                    <button class="menu-item" onclick="showSection('deferred-payment')">
+                        <span>後日入金</span>
+                    </button>
                 </div>
             </div>
             
@@ -2112,6 +2115,88 @@
 
                     </div>
                 </div>
+
+                <div class="content-section" id="deferred-payment-section">
+                    <div class="dashboard-header">
+                        <h1>後日入金管理</h1>
+                        <button class="logout-btn" onclick="logout()">ログアウト</button>
+                    </div>
+
+                    <div class="cashflow-container">
+                        <!-- 年選択セクション -->
+                        <div class="month-selector-section">
+                            <div class="form-group">
+                                <label for="deferredYear">年:</label>
+                                <select id="deferredYear" onchange="updateDeferredPaymentTable()">
+                                    <option value="2024">2024年</option>
+                                    <option value="2025" selected>2025年</option>
+                                    <option value="2026">2026年</option>
+                                    <option value="2027">2027年</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 後日入金一覧テーブル -->
+                        <div class="cashflow-section">
+                            <h2 class="section-title">後日入金一覧</h2>
+                            <div class="table-container">
+                                <table class="cashflow-table">
+                                    <thead>
+                                        <tr>
+                                            <th>月</th>
+                                            <th>月間売上合計</th>
+                                            <th>精算書額</th>
+                                            <th>差額</th>
+                                            <th>後日入金日</th>
+                                            <th>入金確認</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="deferredPaymentTableBody">
+                                        <!-- JavaScriptで動的に生成 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for deferred payment edit -->
+    <div id="deferredPaymentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>精算書額・入金日編集</h2>
+                <span class="close" onclick="closeDeferredPaymentModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="deferredPaymentForm" onsubmit="saveDeferredPayment(event)">
+                    <input type="hidden" id="deferredMonth">
+                    <input type="hidden" id="deferredYear">
+
+                    <div class="form-group">
+                        <label>対象月:</label>
+                        <input type="text" id="deferredMonthDisplay" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="settlementAmount">精算書額:</label>
+                        <input type="number" id="settlementAmount" step="1" min="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="paymentDate">後日入金日:</label>
+                        <input type="date" id="paymentDate">
+                    </div>
+
+                    <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+                        <button type="submit" class="btn" style="background: #10b981;">保存</button>
+                        <button type="button" class="btn" style="background: #6b7280;" onclick="closeDeferredPaymentModal()">キャンセル</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -2316,16 +2401,20 @@
             // Add active class to the menu item for this section
             document.querySelectorAll('.menu-item').forEach(item => {
                 if ((section === 'calendar' && item.textContent.includes('売上管理')) ||
-                    (section === 'cashflow' && item.textContent.includes('入出金'))) {
+                    (section === 'cashflow' && item.textContent.includes('入出金')) ||
+                    (section === 'deferred-payment' && item.textContent.includes('後日入金'))) {
                     item.classList.add('active');
                 }
             });
-            
+
             // Show the selected section
             if (section === 'calendar') {
                 document.getElementById('calendar-section').classList.add('active');
             } else if (section === 'cashflow') {
                 document.getElementById('cashflow-section').classList.add('active');
+            } else if (section === 'deferred-payment') {
+                document.getElementById('deferred-payment-section').classList.add('active');
+                updateDeferredPaymentTable();
             }
         }
         
@@ -4187,6 +4276,150 @@
                 }
             });
         };
+
+        // ===================================
+        // 後日入金機能
+        // ===================================
+        let deferredPaymentData = {};
+
+        // 後日入金データの初期化
+        function initDeferredPayment() {
+            const savedData = localStorage.getItem('deferredPaymentData');
+            if (savedData) {
+                deferredPaymentData = JSON.parse(savedData);
+            }
+        }
+
+        // 後日入金データを保存
+        function saveDeferredPaymentToStorage() {
+            localStorage.setItem('deferredPaymentData', JSON.stringify(deferredPaymentData));
+            localStorage.setItem('deferredPaymentDataUpdated', new Date().toISOString());
+
+            // Supabaseに同期
+            if (typeof saveToSupabase === 'function' && supabase) {
+                saveToSupabase('deferredPayment', deferredPaymentData);
+            }
+        }
+
+        // 月間売上合計を取得
+        function getMonthlySalesTotal(year, month) {
+            const data = calendarData[year] ? calendarData[year][month] : null;
+            if (!data) return 0;
+
+            let total = 0;
+            for (let day in data) {
+                const sales = parseFloat(data[day].sales) || 0;
+                total += sales;
+            }
+            return total;
+        }
+
+        // 翌翌月の月末日を計算
+        function getPaymentDueDate(year, month) {
+            // 月は0から始まるので+1して、さらに+2で翌翌月
+            const targetDate = new Date(year, month + 2, 0);
+            return targetDate;
+        }
+
+        // 後日入金テーブルを更新
+        function updateDeferredPaymentTable() {
+            const year = parseInt(document.getElementById('deferredYear').value);
+            const tbody = document.getElementById('deferredPaymentTableBody');
+            tbody.innerHTML = '';
+
+            for (let month = 1; month <= 12; month++) {
+                const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+                const monthlySales = getMonthlySalesTotal(year, month);
+                const deferredData = deferredPaymentData[monthKey] || {};
+                const settlementAmount = deferredData.settlementAmount || 0;
+                const difference = monthlySales - settlementAmount;
+                const paymentDate = deferredData.paymentDate || '';
+                const isConfirmed = deferredData.confirmed || false;
+
+                // 翌翌月月末を計算
+                const dueDate = getPaymentDueDate(year, month);
+                const dueDateStr = `${dueDate.getFullYear()}年${dueDate.getMonth() + 1}月${dueDate.getDate()}日`;
+
+                const displayDate = paymentDate || dueDateStr;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${month}月</td>
+                    <td>¥${monthlySales.toLocaleString()}</td>
+                    <td>¥${settlementAmount.toLocaleString()}</td>
+                    <td style="color: ${difference >= 0 ? '#10b981' : '#ef4444'}; font-weight: bold;">
+                        ¥${difference.toLocaleString()}
+                    </td>
+                    <td>${displayDate}</td>
+                    <td style="text-align: center;">
+                        <input type="checkbox" ${isConfirmed ? 'checked' : ''}
+                               onchange="togglePaymentConfirmation('${monthKey}', this.checked)">
+                    </td>
+                    <td style="text-align: center;">
+                        <button onclick="openDeferredPaymentModal(${year}, ${month})"
+                                style="background: none; border: none; cursor: pointer; font-size: 18px;">
+                            ✏️
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            }
+        }
+
+        // 編集モーダルを開く
+        function openDeferredPaymentModal(year, month) {
+            const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+            const deferredData = deferredPaymentData[monthKey] || {};
+
+            document.getElementById('deferredMonth').value = month;
+            document.getElementById('deferredMonthDisplay').value = `${year}年${month}月`;
+            document.getElementById('settlementAmount').value = deferredData.settlementAmount || '';
+            document.getElementById('paymentDate').value = deferredData.paymentDate || '';
+
+            document.getElementById('deferredPaymentModal').style.display = 'block';
+        }
+
+        // 編集モーダルを閉じる
+        function closeDeferredPaymentModal() {
+            document.getElementById('deferredPaymentModal').style.display = 'none';
+        }
+
+        // 後日入金データを保存
+        function saveDeferredPayment(event) {
+            event.preventDefault();
+
+            const year = parseInt(document.getElementById('deferredYear').value);
+            const month = parseInt(document.getElementById('deferredMonth').value);
+            const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+
+            const settlementAmount = parseFloat(document.getElementById('settlementAmount').value) || 0;
+            const paymentDate = document.getElementById('paymentDate').value;
+
+            if (!deferredPaymentData[monthKey]) {
+                deferredPaymentData[monthKey] = {};
+            }
+
+            deferredPaymentData[monthKey].settlementAmount = settlementAmount;
+            deferredPaymentData[monthKey].paymentDate = paymentDate;
+
+            saveDeferredPaymentToStorage();
+            updateDeferredPaymentTable();
+            closeDeferredPaymentModal();
+            showMessage('保存しました', 'success');
+        }
+
+        // チェックボックスの状態を切り替え
+        function togglePaymentConfirmation(monthKey, checked) {
+            if (!deferredPaymentData[monthKey]) {
+                deferredPaymentData[monthKey] = {};
+            }
+            deferredPaymentData[monthKey].confirmed = checked;
+            saveDeferredPaymentToStorage();
+        }
+
+        // ページ読み込み時に初期化
+        initDeferredPayment();
+
     </script>
 </body>
 </html>
