@@ -4496,16 +4496,16 @@
 
             if (mode === 'monthly') {
                 monthGroup.style.display = 'block';
-                yearlyTable.style.display = 'none';
-                monthlyCards.style.display = 'block';
                 // 現在の月を設定
                 const currentMonth = new Date().getMonth() + 1;
                 document.getElementById('deferredMonth').value = currentMonth;
             } else {
                 monthGroup.style.display = 'none';
-                yearlyTable.style.display = 'table';
-                monthlyCards.style.display = 'none';
             }
+
+            // 両方のモードでカード表示を使用
+            yearlyTable.style.display = 'none';
+            monthlyCards.style.display = 'block';
 
             updateDeferredPaymentTable();
         }
@@ -4524,10 +4524,10 @@
             }
         }
 
-        // 1年間一覧表示（テーブル形式）
+        // 1年間一覧表示（カード形式）
         function updateDeferredYearlyTable(year) {
-            const tbody = document.getElementById('deferredPaymentTableBody');
-            tbody.innerHTML = '';
+            const cardsContainer = document.getElementById('deferredMonthlyCards');
+            cardsContainer.innerHTML = '';
 
             for (let month = 1; month <= 12; month++) {
                 const monthKey = `${year}-${String(month).padStart(2, '0')}`;
@@ -4542,30 +4542,42 @@
 
                 // 入金確認日
                 const confirmationDate = deferredData.confirmationDate || '';
-                let confirmationDisplay = '';
-                if (confirmationDate) {
+                let confirmationDisplay = confirmationDate ? (() => {
                     const cd = new Date(confirmationDate);
-                    confirmationDisplay = `${cd.getFullYear()}年${cd.getMonth() + 1}月${cd.getDate()}日`;
-                }
+                    return `${cd.getFullYear()}年${cd.getMonth() + 1}月${cd.getDate()}日`;
+                })() : '未設定';
 
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${month}月</td>
-                    <td>¥${monthlySales.toLocaleString()}</td>
-                    <td>¥${settlementAmount.toLocaleString()}</td>
-                    <td style="color: ${difference >= 0 ? '#10b981' : '#ef4444'}; font-weight: bold;">
-                        ¥${difference.toLocaleString()}
-                    </td>
-                    <td>${dueDateStr}</td>
-                    <td>${confirmationDisplay}</td>
-                    <td style="text-align: center;">
-                        <button onclick="openDeferredPaymentModal(${year}, ${month})"
-                                style="background: none; border: none; cursor: pointer; font-size: 18px;">
-                            ✏️
-                        </button>
-                    </td>
+                const card = document.createElement('div');
+                card.className = 'deferred-card';
+                card.innerHTML = `
+                    <div class="deferred-card-header">
+                        <div class="deferred-card-month">${year}年${month}月</div>
+                        <button onclick="openDeferredPaymentModal(${year}, ${month})" class="deferred-card-edit">✏️</button>
+                    </div>
+                    <div class="deferred-card-row">
+                        <div class="deferred-card-label">月間売上合計</div>
+                        <div class="deferred-card-value">¥${monthlySales.toLocaleString()}</div>
+                    </div>
+                    <div class="deferred-card-row">
+                        <div class="deferred-card-label">精算書額</div>
+                        <div class="deferred-card-value">¥${settlementAmount.toLocaleString()}</div>
+                    </div>
+                    <div class="deferred-card-row">
+                        <div class="deferred-card-label">差額</div>
+                        <div class="deferred-card-value ${difference >= 0 ? 'positive' : 'negative'}">
+                            ¥${difference.toLocaleString()}
+                        </div>
+                    </div>
+                    <div class="deferred-card-row">
+                        <div class="deferred-card-label">後日入金予定日</div>
+                        <div class="deferred-card-value">${dueDateStr}</div>
+                    </div>
+                    <div class="deferred-card-row">
+                        <div class="deferred-card-label">入金確認日</div>
+                        <div class="deferred-card-value">${confirmationDisplay}</div>
+                    </div>
                 `;
-                tbody.appendChild(row);
+                cardsContainer.appendChild(card);
             }
         }
 
